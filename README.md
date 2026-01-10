@@ -145,10 +145,6 @@ without breaking users.
 ## 🚧 Roadmap
 
 - Public `ChartController` API
-- Indicator & overlay extension system
-- Crosshair & tooltip support
-- Multiple panes (price + volume)
-- Web & Desktop optimizations
 
 ---
 
