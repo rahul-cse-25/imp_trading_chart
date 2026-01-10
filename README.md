@@ -1,39 +1,158 @@
-<!--
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# imp_trading_chart
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/tools/pub/writing-package-pages).
+A **high-performance trading chart engine for Flutter**, inspired by
+TradingView Lightweight Charts.
 
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/to/develop-packages).
--->
+`imp_trading_chart` is designed as a **rendering engine**, not a widget tree.
+It is optimized for **large datasets**, **real-time updates**, and **smooth
+pan & zoom**, while keeping the public API minimal and stable.
 
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
+---
 
-## Features
+## ✨ Key Features
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
+- ⚡ CustomPainter-based rendering (no widget candles)
+- 📈 Viewport-driven drawing (only visible data is rendered)
+- 🧮 Index-based timestamps (no DateTime math in painter)
+- 🧠 Cached price scale & coordinate mapping
+- 🧩 Clean separation: **Data → Engine → Rendering**
+- 🖐 Pan, zoom, double-tap gestures
+- 🪟 Multiple chart instances supported
+- 🎨 Fully customizable styling & layout
+- 🚀 Designed for large datasets (10k+ candles)
 
-## Getting started
+---
 
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
+## 🧠 Design Philosophy
 
-## Usage
+This package intentionally avoids:
+- Widget-per-candle rendering
+- DateTime calculations in the render loop
+- Rebuilding UI for every data change
 
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder.
+Instead, it follows a **chart engine architecture**:
 
-```dart
-const like = 'sample';
+```
+Data (List<Candle>)
+   ↓
+Chart Engine (viewport, scaling, mapping)
+   ↓
+Rendering Layer (CustomPainter)
 ```
 
-## Additional information
+---
 
-TODO: Tell users more about the package: where to find more information, how to
-contribute to the package, how to file issues, what response they can expect
-from the package authors, and more.
+## 📦 Installation
+
+```yaml
+dependencies:
+  imp_trading_chart: ^0.1.0
+```
+
+---
+
+## 🚀 Basic Usage
+
+```dart
+import 'package:imp_trading_chart/imp_chart.dart';
+
+ImpChart(
+  candles: candles,
+  style: ChartStyle(
+    bullishColor: Colors.green,
+    bearishColor: Colors.red,
+  ),
+);
+```
+
+---
+
+## 📊 Candle Model
+
+```dart
+Candle(
+  timestamp: 0,
+  open: 100,
+  high: 120,
+  low: 90,
+  close: 110,
+  volume: 500,
+);
+```
+
+> ⚠️ The chart engine does **not** perform time aggregation.
+> Data should be prepared before passing to the chart.
+
+---
+
+## 🎨 Styling & Layout
+
+### ChartStyle
+```dart
+ChartStyle(
+  bullishColor: Colors.green,
+  bearishColor: Colors.red,
+  gridColor: const Color(0xFF2A2A2A),
+  backgroundColor: const Color(0xFF0E0E0E),
+  wickWidth: 1,
+  candleSpacing: 2,
+);
+```
+
+### ChartLayout
+```dart
+ChartLayout(
+  priceAxisWidth: 60,
+  timeAxisHeight: 24,
+);
+```
+
+---
+
+## 🧪 Example App
+
+A complete runnable example is included in the `example/` folder.
+
+```bash
+cd example
+flutter run
+```
+
+---
+
+## 📚 Documentation
+
+- Quick Reference: [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
+- Architecture & Internals: [DOCUMENTATION.md](DOCUMENTATION.md)
+
+---
+
+## 🔒 Public API vs Internals
+
+Only the following are part of the **public API**:
+
+- `ImpChart`
+- `Candle`
+- `ChartStyle`
+- `ChartLayout`
+- `LabelStyles`
+
+All engine internals are intentionally hidden to allow future optimizations
+without breaking users.
+
+---
+
+## 🚧 Roadmap
+
+- Public `ChartController` API
+- Indicator & overlay extension system
+- Crosshair & tooltip support
+- Multiple panes (price + volume)
+- Web & Desktop optimizations
+
+---
+
+## 📄 License
+
+MIT License  
+© Rahul Prajapati

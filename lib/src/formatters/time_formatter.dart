@@ -2,19 +2,19 @@
 class TimeFormatContext {
   /// Duration of the visible time range
   final Duration visibleTimeSpan;
-  
+
   /// Whether this is the first label
   final bool isFirstLabel;
-  
+
   /// Whether this is the last label
   final bool isLastLabel;
-  
+
   /// Position of the label (0-based)
   final int labelIndex;
-  
+
   /// Total number of labels being displayed
   final int totalLabels;
-  
+
   const TimeFormatContext({
     required this.visibleTimeSpan,
     required this.isFirstLabel,
@@ -25,47 +25,57 @@ class TimeFormatContext {
 }
 
 /// Flexible time formatter for custom time/date label formatting.
-/// 
+///
 /// Implement this interface to provide custom time formatting logic.
 /// Default implementation provides smart formatting based on time range.
 abstract class TimeFormatter {
   /// Format a timestamp (seconds since epoch) for display
-  /// 
+  ///
   /// [context] is optional and provides information about the visible time range
   /// and label position for responsive formatting. If not provided, formatters
   /// should use default behavior.
   String format(int timestamp, {TimeFormatContext? context});
-  
+
   /// Default formatter that provides smart formatting based on time range
   factory TimeFormatter.smart() => _SmartTimeFormatter();
-  
+
   /// Hour:Minute formatter (14:30)
   factory TimeFormatter.hourMinute() => _HourMinuteFormatter();
-  
+
   /// Full date time formatter (2024-01-15 14:30)
   factory TimeFormatter.dateTime() => _DateTimeFormatter();
-  
+
   /// Date only formatter (2024-01-15)
   factory TimeFormatter.dateOnly() => _DateOnlyFormatter();
-  
+
   /// Day name formatter (Mon, Tue, etc.)
   factory TimeFormatter.dayName() => _DayNameFormatter();
-  
+
   /// Custom formatter with format string (uses DateFormat pattern)
   factory TimeFormatter.custom(String pattern) => _CustomTimeFormatter(pattern);
 }
 
 /// Month name abbreviations (US format)
 const _monthNames = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec'
 ];
 
 /// Crosshair datetime formatter for "DD ShortMonth, YY HH:MM AM/PM" format
 class CrosshairTimeFormatter implements TimeFormatter {
   /// Default constructor
   const CrosshairTimeFormatter();
-  
+
   @override
   String format(int timestamp, {TimeFormatContext? context}) {
     final date = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
@@ -74,11 +84,11 @@ class CrosshairTimeFormatter implements TimeFormatter {
     final year = date.year.toString().substring(2); // Last 2 digits of year
     final hour = date.hour;
     final minute = date.minute.toString().padLeft(2, '0');
-    
+
     // Convert to 12-hour format with AM/PM
     final hour12 = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
     final amPm = hour < 12 ? 'AM' : 'PM';
-    
+
     return '$day $month, $year $hour12:$minute $amPm';
   }
 }
@@ -89,12 +99,12 @@ class _ResponsiveTimeFormatter implements TimeFormatter {
   @override
   String format(int timestamp, {TimeFormatContext? context}) {
     final date = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
-    
+
     // If no context provided, use default hour:minute format
     if (context == null) {
       return '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
     }
-    
+
     final span = context.visibleTimeSpan;
     final isFirstOrLast = context.isFirstLabel || context.isLastLabel;
     final day = date.day;
@@ -102,7 +112,7 @@ class _ResponsiveTimeFormatter implements TimeFormatter {
     final year = date.year;
     final hour = date.hour.toString().padLeft(2, '0');
     final minute = date.minute.toString().padLeft(2, '0');
-    
+
     // Format selection based on time span (TradingView-style logic)
     if (span.inDays >= 365) {
       // Years: Show year only (e.g., "2025", "2024")
@@ -159,7 +169,7 @@ class _ResponsiveTimeFormatter implements TimeFormatter {
 /// Now uses responsive formatter internally
 class _SmartTimeFormatter implements TimeFormatter {
   final _ResponsiveTimeFormatter _responsive = _ResponsiveTimeFormatter();
-  
+
   @override
   String format(int timestamp, {TimeFormatContext? context}) {
     // If context provided, use responsive formatter
@@ -203,7 +213,7 @@ class _DateOnlyFormatter implements TimeFormatter {
 /// Day name formatter
 class _DayNameFormatter implements TimeFormatter {
   static const _dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  
+
   @override
   String format(int timestamp, {TimeFormatContext? context}) {
     final date = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
@@ -214,9 +224,9 @@ class _DayNameFormatter implements TimeFormatter {
 /// Custom formatter using DateFormat pattern (requires intl package)
 class _CustomTimeFormatter implements TimeFormatter {
   final String pattern;
-  
+
   _CustomTimeFormatter(this.pattern);
-  
+
   @override
   String format(int timestamp, {TimeFormatContext? context}) {
     final date = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
