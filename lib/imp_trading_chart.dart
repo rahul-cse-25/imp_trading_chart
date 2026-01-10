@@ -12,6 +12,9 @@ library;
 /// ─────────────────────────────────────────────────────────
 
 export 'src/data/candle.dart';
+/// Formatter
+export 'src/formatters/price_formatter.dart';
+export 'src/formatters/time_formatter.dart';
 
 /// ─────────────────────────────────────────────────────────
 /// STYLING & LAYOUT (configuration only, no logic)
