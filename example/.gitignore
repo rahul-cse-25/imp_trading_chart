@@ -1,0 +1,74 @@
+# ------------------------------------------------------------
+# Misc
+# ------------------------------------------------------------
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+Thumbs.db
+
+# ------------------------------------------------------------
+# IDE / Editor
+# ------------------------------------------------------------
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# ------------------------------------------------------------
+# Dart / Flutter
+# ------------------------------------------------------------
+.dart_tool/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+build/
+coverage/
+
+# ------------------------------------------------------------
+# Flutter generated
+# ------------------------------------------------------------
+**/doc/api/
+**/ios/Flutter/.last_build_id
+
+# ------------------------------------------------------------
+# Android
+# ------------------------------------------------------------
+android/.gradle/
+android/local.properties
+android/key.properties
+android/**/GeneratedPluginRegistrant.java
+
+android/app/debug/
+android/app/profile/
+android/app/release/
+
+# ------------------------------------------------------------
+# iOS
+# ------------------------------------------------------------
+ios/.symlinks/
+ios/Pods/
+ios/.generated/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/App.framework
+ios/Flutter/engine/
+ios/Flutter/.last_build_id
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/ephemeral/
+
+# ------------------------------------------------------------
+# macOS
+# ------------------------------------------------------------
+macos/Flutter/ephemeral/
+macos/Pods/
+
+# ------------------------------------------------------------
+# Windows / Linux
+# ------------------------------------------------------------
+windows/flutter/ephemeral/
+linux/flutter/ephemeral/

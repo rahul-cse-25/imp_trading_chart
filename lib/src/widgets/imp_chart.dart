@@ -3,8 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:imp_trading_chart/imp_trading_chart.dart'
-    show Candle, ChartStyle;
+import 'package:imp_trading_chart/imp_trading_chart.dart';
 import 'package:imp_trading_chart/src/engine/chart_engine.dart'
     show ChartEngine;
 import 'package:imp_trading_chart/src/engine/chart_viewport.dart'
@@ -450,8 +449,9 @@ class _ImpChartState extends State<ImpChart>
 
   /// Play a single ripple animation
   void _playRippleAnimation() {
-    if (!mounted || !widget.style.rippleStyle.show || widget.candles.isEmpty)
+    if (!mounted || !widget.style.rippleStyle.show || widget.candles.isEmpty) {
       return;
+    }
 
     // Reset and play animation
     _pulseController.reset();
@@ -460,8 +460,9 @@ class _ImpChartState extends State<ImpChart>
 
   void _triggerPulse() {
     // For backward compatibility - just ensure ripple is running
-    if (!mounted || !widget.style.rippleStyle.show || widget.candles.isEmpty)
+    if (!mounted || !widget.style.rippleStyle.show || widget.candles.isEmpty) {
       return;
+    }
 
     // If continuous ripple is not running, start it
     if (_rippleTimer == null || !_rippleTimer!.isActive) {
