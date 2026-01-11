@@ -83,6 +83,14 @@ Built specifically for:
 ## 📊 Chart Variants
 
 <p align="center">
+  <img src="screenshots/cyber.jpg" width="200"/>
+  <img src="screenshots/glass.jpg" width="200"/>
+  <img src="screenshots/aurora.jpg" width="200"/>
+  <img src="screenshots/sunset.jpg" width="200"/>
+  <img src="screenshots/professional.jpg" width="200"/>
+</p>
+
+<p align="center">
   <img src="screenshots/sim_trade.jpg" width="200"/>
   <img src="screenshots/sim_simple.jpg" width="200"/>
   <img src="screenshots/sim_compact.jpg" width="200"/>
@@ -96,13 +104,6 @@ Built specifically for:
 | Compact | Dashboards & lists               |
 | Minimal | Sparklines & previews            |
 
-<p align="center">
-  <img src="screenshots/cyber.jpg" height="200"/>
-  <img src="screenshots/glass.jpg" height="200"/>
-  <img src="screenshots/aurora.jpg" height="200"/>
-  <img src="screenshots/sunset.jpg" height="200"/>
-  <img src="screenshots/professional.jpg" height="200"/>
-</p>
 
 ---
 
