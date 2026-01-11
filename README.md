@@ -1,8 +1,8 @@
 # imp_trading_chart
 
 <p align="center">
-  <img src="screenshots/pub/professional_crop.jpg" width="360"/>
-  <img src="screenshots/real.jpg" width="360"/>
+  <img src="screenshots/pub/professional_crop.jpg" height="360"/>
+  <img src="screenshots/real.jpg" height="360"/>
 </p>
 
 <p align="center">
@@ -133,10 +133,7 @@ dependencies:
 
 ```dart
 ImpChart.trading(
-  candles: candles,
-  currentPrice: candles.last.close,
-  showCrosshair: true,
-  defaultVisibleCount: 200,
+  candles: candles
 );
 ```
 
@@ -171,8 +168,8 @@ flutter run
 
 ## 📚 Documentation
 
-* 📘 Architecture & Internals → `DOCUMENTATION.md`
-* ⚡ Quick API Guide → `QUICK_REFERENCE.md`
+* 📘 Architecture & Internals → [DOCUMENTATION.md](DOCUMENTATION.md)
+* ⚡ Quick API Guide → [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
 
 ---
 
