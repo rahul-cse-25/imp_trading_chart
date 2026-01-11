@@ -96,6 +96,14 @@ Built specifically for:
 | Compact | Dashboards & lists               |
 | Minimal | Sparklines & previews            |
 
+<p align="center">
+  <img src="screenshots/cyber.jpg" height="200"/>
+  <img src="screenshots/glass.jpg" height="200"/>
+  <img src="screenshots/aurora.jpg" height="200"/>
+  <img src="screenshots/sunset.jpg" height="200"/>
+  <img src="screenshots/professional.jpg" height="200"/>
+</p>
+
 ---
 
 ## 🧠 Engine-First Architecture
