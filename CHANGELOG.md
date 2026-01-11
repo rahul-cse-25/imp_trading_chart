@@ -1,9 +1,16 @@
 # Changelog
 
+## 0.1.1
+
+### Fixed
+- Resolved deprecated Matrix4 scaling API usage
+- Fixed internal import issues and warnings
+- Package description updated
+- No public API changes
+
 ## 0.1.0
 
 ### Initial release
-
 - High-performance trading chart engine for Flutter
 - CustomPainter-based candlestick rendering
 - Viewport-driven drawing (only visible data rendered)

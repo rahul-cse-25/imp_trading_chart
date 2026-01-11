@@ -223,7 +223,13 @@ class _NavigationCardState extends State<_NavigationCard> {
       onTapCancel: () => setState(() => _isPressed = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        transform: Matrix4.identity()..scale(_isPressed ? 0.98 : 1.0),
+        transform: Matrix4.identity()
+          ..scaleByDouble(
+            _isPressed ? 0.98 : 1.0, // sx
+            _isPressed ? 0.98 : 1.0, // sy
+            1.0, // sz
+            1.0, // sw
+          ),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,

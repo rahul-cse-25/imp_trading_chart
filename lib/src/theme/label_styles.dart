@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:imp_trading_chart/imp_trading_chart.dart';
-import 'package:imp_trading_chart/src/data/enums.dart' show LineStyle;
 
 // ============================================================================
 // LINE CHART STYLE
