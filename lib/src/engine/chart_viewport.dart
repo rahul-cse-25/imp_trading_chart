@@ -132,10 +132,10 @@ class ChartViewport {
   ///
   /// Zoom is CENTER-BASED.
   ChartViewport zoom(
-      int delta, {
-        int minVisible = 5,
-        int maxVisible = 1000,
-      }) {
+    int delta, {
+    int minVisible = 5,
+    int maxVisible = 1000,
+  }) {
     final newVisible = (visibleCount + delta).clamp(
       minVisible,
       maxVisible.clamp(minVisible, totalCount),
@@ -158,11 +158,11 @@ class ChartViewport {
   ///
   /// Used for pinch-to-zoom interactions.
   ChartViewport zoomAround(
-      int anchorIndex,
-      int delta, {
-        int minVisible = 5,
-        int maxVisible = 1000,
-      }) {
+    int anchorIndex,
+    int delta, {
+    int minVisible = 5,
+    int maxVisible = 1000,
+  }) {
     final newVisible = (visibleCount + delta).clamp(
       minVisible,
       maxVisible.clamp(minVisible, totalCount),
@@ -190,8 +190,7 @@ class ChartViewport {
   /// End index of visible candles (exclusive).
   ///
   /// Equivalent to: startIndex + visibleCount
-  int get endIndex =>
-      (startIndex + visibleCount).clamp(0, totalCount);
+  int get endIndex => (startIndex + visibleCount).clamp(0, totalCount);
 
   /// Whether viewport can pan left (towards older candles).
   bool get canPanLeft => startIndex > 0;
@@ -213,17 +212,15 @@ class ChartViewport {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is ChartViewport &&
-              runtimeType == other.runtimeType &&
-              startIndex == other.startIndex &&
-              visibleCount == other.visibleCount &&
-              totalCount == other.totalCount;
+      other is ChartViewport &&
+          runtimeType == other.runtimeType &&
+          startIndex == other.startIndex &&
+          visibleCount == other.visibleCount &&
+          totalCount == other.totalCount;
 
   @override
   int get hashCode =>
-      startIndex.hashCode ^
-      visibleCount.hashCode ^
-      totalCount.hashCode;
+      startIndex.hashCode ^ visibleCount.hashCode ^ totalCount.hashCode;
 }
 
 /// ─────────────────────────────────────────────────────────────

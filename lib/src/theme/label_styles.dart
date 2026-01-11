@@ -214,16 +214,16 @@ class LineChartStyle {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is LineChartStyle &&
-              runtimeType == other.runtimeType &&
-              color == other.color &&
-              width == other.width &&
-              showPoints == other.showPoints &&
-              pointRadius == other.pointRadius &&
-              showGlow == other.showGlow &&
-              glowWidth == other.glowWidth &&
-              smooth == other.smooth &&
-              curveTension == other.curveTension;
+      other is LineChartStyle &&
+          runtimeType == other.runtimeType &&
+          color == other.color &&
+          width == other.width &&
+          showPoints == other.showPoints &&
+          pointRadius == other.pointRadius &&
+          showGlow == other.showGlow &&
+          glowWidth == other.glowWidth &&
+          smooth == other.smooth &&
+          curveTension == other.curveTension;
 
   @override
   int get hashCode =>
@@ -483,13 +483,10 @@ class AxisStyle {
       gridColor: gridColor ?? this.gridColor,
       gridLineWidth: gridLineWidth ?? this.gridLineWidth,
       gridLineStyle: gridLineStyle ?? this.gridLineStyle,
-      horizontalGridLines:
-      horizontalGridLines ?? this.horizontalGridLines,
-      verticalGridLines:
-      verticalGridLines ?? this.verticalGridLines,
+      horizontalGridLines: horizontalGridLines ?? this.horizontalGridLines,
+      verticalGridLines: verticalGridLines ?? this.verticalGridLines,
       yAxisPadding: yAxisPadding ?? this.yAxisPadding,
       xAxisPadding: xAxisPadding ?? this.xAxisPadding,
     );
   }
 }
-

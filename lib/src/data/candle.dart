@@ -124,8 +124,7 @@ class Candle {
   /// Percentage price change relative to open
   ///
   /// Returns 0 if open is 0 to avoid division errors
-  double get changePercent =>
-      open != 0 ? ((close - open) / open) * 100 : 0.0;
+  double get changePercent => open != 0 ? ((close - open) / open) * 100 : 0.0;
 
   /// Percentage change formatted with sign
   ///
@@ -161,8 +160,7 @@ class Candle {
   /// - Bearish → red
   ///
   /// Matches the ImpChart line color for visual consistency
-  Color get color =>
-      isBullish ? TradingColors.bullish : TradingColors.bearish;
+  Color get color => isBullish ? TradingColors.bullish : TradingColors.bearish;
 
   /// Semi-transparent body fill color
   Color get fillColor =>
@@ -177,52 +175,52 @@ class Candle {
 
   /// Open price (neutral color)
   ({double value, Color color, String formatted}) get openColored => (
-  value: open,
-  color: TradingColors.openLabel,
-  formatted: open.formatNumWithPos(),
-  );
+        value: open,
+        color: TradingColors.openLabel,
+        formatted: open.formatNumWithPos(),
+      );
 
   /// High price (semantic green)
   ({double value, Color color, String formatted}) get highColored => (
-  value: high,
-  color: TradingColors.highLabel,
-  formatted: high.formatNumWithPos(),
-  );
+        value: high,
+        color: TradingColors.highLabel,
+        formatted: high.formatNumWithPos(),
+      );
 
   /// Low price (semantic warning color)
   ({double value, Color color, String formatted}) get lowColored => (
-  value: low,
-  color: TradingColors.lowLabel,
-  formatted: low.formatNumWithPos(),
-  );
+        value: low,
+        color: TradingColors.lowLabel,
+        formatted: low.formatNumWithPos(),
+      );
 
   /// Close price (direction-based color)
   ({double value, Color color, String formatted}) get closeColored => (
-  value: close,
-  color: color,
-  formatted: close.formatNumWithPos(),
-  );
+        value: close,
+        color: color,
+        formatted: close.formatNumWithPos(),
+      );
 
   /// Volume (neutral color, optional)
   ({double? value, Color color, String formatted}) get volumeColored => (
-  value: volume,
-  color: TradingColors.volumeLabel,
-  formatted: volume?.formatNumWithPos() ?? '-',
-  );
+        value: volume,
+        color: TradingColors.volumeLabel,
+        formatted: volume?.formatNumWithPos() ?? '-',
+      );
 
   /// Absolute change value with semantic color
   ({double value, Color color, String formatted}) get changeValueColored => (
-  value: changeValue,
-  color: TradingColors.fromValue(changeValue),
-  formatted: changeValueWithSign,
-  );
+        value: changeValue,
+        color: TradingColors.fromValue(changeValue),
+        formatted: changeValueWithSign,
+      );
 
   /// Percentage change with semantic color
   ({double value, Color color, String formatted}) get changePercentColored => (
-  value: changePercent,
-  color: TradingColors.fromPercent(changePercent),
-  formatted: changePercentWithSign,
-  );
+        value: changePercent,
+        color: TradingColors.fromPercent(changePercent),
+        formatted: changePercentWithSign,
+      );
 
   // ===========================================================================
   // RAW COLOR CONVENIENCE GETTERS
@@ -256,7 +254,7 @@ class Candle {
       close: parseDoubleValue(map['close']),
       time: parseIntValue(map['time']),
       volume:
-      map.containsKey('volume') ? parseDoubleValue(map['volume']) : null,
+          map.containsKey('volume') ? parseDoubleValue(map['volume']) : null,
     );
   }
 

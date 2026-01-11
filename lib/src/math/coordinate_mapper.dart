@@ -1,8 +1,7 @@
 import 'package:flutter/foundation.dart' show immutable;
 import 'package:imp_trading_chart/src/engine/chart_viewport.dart'
     show ChartViewport;
-import 'package:imp_trading_chart/src/engine/price_scale.dart'
-    show PriceScale;
+import 'package:imp_trading_chart/src/engine/price_scale.dart' show PriceScale;
 
 /// ─────────────────────────────────────────────────────────────
 /// 📐 CoordinateMapper
@@ -63,12 +62,10 @@ class CoordinateMapper {
   final double paddingBottom;
 
   /// Effective drawable width after removing horizontal padding.
-  double get contentWidth =>
-      chartWidth - paddingLeft - paddingRight;
+  double get contentWidth => chartWidth - paddingLeft - paddingRight;
 
   /// Effective drawable height after removing vertical padding.
-  double get contentHeight =>
-      chartHeight - paddingTop - paddingBottom;
+  double get contentHeight => chartHeight - paddingTop - paddingBottom;
 
   const CoordinateMapper({
     required this.viewport,
@@ -128,8 +125,7 @@ class CoordinateMapper {
 
     // Normalize to [0, visibleCount]
     final normalizedX = relativeX / contentWidth;
-    final exactRelativeIndex =
-        normalizedX * viewport.visibleCount;
+    final exactRelativeIndex = normalizedX * viewport.visibleCount;
 
     // Round to nearest candle center
     final relativeIndex = exactRelativeIndex.round();
@@ -152,8 +148,7 @@ class CoordinateMapper {
   /// - Uses inverted Y-axis (higher price → smaller Y)
   /// - Applies top padding offset
   double priceToY(double price) {
-    final y =
-    priceScale.priceToY(price, contentHeight);
+    final y = priceScale.priceToY(price, contentHeight);
     return y + paddingTop;
   }
 
@@ -171,8 +166,7 @@ class CoordinateMapper {
   // ─────────────────────────────────────────────────────────
 
   /// Width of a single candle in pixels.
-  double get candleWidth =>
-      contentWidth / viewport.visibleCount;
+  double get candleWidth => contentWidth / viewport.visibleCount;
 
   /// Get X coordinate of candle CENTER.
   ///
@@ -209,16 +203,16 @@ class CoordinateMapper {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is CoordinateMapper &&
-              runtimeType == other.runtimeType &&
-              viewport == other.viewport &&
-              priceScale == other.priceScale &&
-              chartWidth == other.chartWidth &&
-              chartHeight == other.chartHeight &&
-              paddingLeft == other.paddingLeft &&
-              paddingRight == other.paddingRight &&
-              paddingTop == other.paddingTop &&
-              paddingBottom == other.paddingBottom;
+      other is CoordinateMapper &&
+          runtimeType == other.runtimeType &&
+          viewport == other.viewport &&
+          priceScale == other.priceScale &&
+          chartWidth == other.chartWidth &&
+          chartHeight == other.chartHeight &&
+          paddingLeft == other.paddingLeft &&
+          paddingRight == other.paddingRight &&
+          paddingTop == other.paddingTop &&
+          paddingBottom == other.paddingBottom;
 
   @override
   int get hashCode =>

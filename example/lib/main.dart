@@ -41,12 +41,12 @@ import 'main_navigation_screen.dart';
 /// - examples easy to reason about
 /// - onboarding simple for new contributors
 void main() {
-    WidgetsFlutterBinding.ensureInitialized();
-    SystemChrome.setPreferredOrientations([
-            DeviceOrientation.portraitUp,
-            DeviceOrientation.portraitDown,
-        ]);
-    runApp(const ChartExampleApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+  runApp(const ChartExampleApp());
 }
 
 /// Root widget for the ImpChart example application.
@@ -60,37 +60,36 @@ void main() {
 /// Any state (tabs, chart data, animations) must live
 /// in feature-specific widgets, NOT here.
 class ChartExampleApp extends StatelessWidget {
-    const ChartExampleApp({super.key});
+  const ChartExampleApp({super.key});
 
-    @override
-    Widget build(BuildContext context) {
-        return MaterialApp(
-            /// Application title (used by OS task switchers)
-            title: 'ImpChart Showcase',
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      /// Application title (used by OS task switchers)
+      title: 'ImpChart Showcase',
 
-            /// Global dark theme configuration.
-            ///
-            /// The theme is intentionally opinionated to match
-            /// real trading applications:
-            /// - Deep navy background
-            /// - Subtle card contrast
-            /// - Minimal divider noise
-            ///
-            /// Individual charts override colors internally
-            /// using `ChartStyle`, not the app theme.
-            theme: ThemeData.dark().copyWith(
-                primaryColor: Colors.cyan,
-                scaffoldBackgroundColor: const Color(0xFF05070F),
-                cardColor: const Color(0xFF1A1F3A),
-                dividerColor: Colors.white24,
-            ),
+      /// Global dark theme configuration.
+      ///
+      /// The theme is intentionally opinionated to match
+      /// real trading applications:
+      /// - Deep navy background
+      /// - Subtle card contrast
+      /// - Minimal divider noise
+      ///
+      /// Individual charts override colors internally
+      /// using `ChartStyle`, not the app theme.
+      theme: ThemeData.dark().copyWith(
+        primaryColor: Colors.cyan,
+        scaffoldBackgroundColor: const Color(0xFF05070F),
+        cardColor: const Color(0xFF1A1F3A),
+        dividerColor: Colors.white24,
+      ),
 
-            /// Main entry screen with navigation options
-            home: const MainNavigationScreen(),
+      /// Main entry screen with navigation options
+      home: const MainNavigationScreen(),
 
-            /// Debug banner intentionally disabled for clean visuals
-            debugShowCheckedModeBanner: false,
-        );
-    }
+      /// Debug banner intentionally disabled for clean visuals
+      debugShowCheckedModeBanner: false,
+    );
+  }
 }
-

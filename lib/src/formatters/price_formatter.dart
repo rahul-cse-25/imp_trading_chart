@@ -99,7 +99,7 @@ abstract class PriceFormatter {
   /// - 1,200 → "$1.20K"
   /// - 500,000,000 → "$500.00M"
   factory PriceFormatter.currencyCompact(
-      {String symbol = '\$', int decimals = 2}) =>
+          {String symbol = '\$', int decimals = 2}) =>
       _CurrencyCompactPriceFormatter(symbol, decimals);
 
   /// Crosshair-specific formatter.
@@ -255,8 +255,6 @@ class _CurrencyCompactPriceFormatter implements PriceFormatter {
     }
   }
 }
-
-
 
 /// Default **const-safe** price formatter used by [PriceLabelStyle].
 ///

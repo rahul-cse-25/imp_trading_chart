@@ -64,9 +64,9 @@ class PriceScale {
   /// This ensures the full price movement (including wicks)
   /// is visible on screen.
   factory PriceScale.fromCandles(
-      List<Candle> candles, {
-        double paddingPercent = 0.05,
-      }) {
+    List<Candle> candles, {
+    double paddingPercent = 0.05,
+  }) {
     if (candles.isEmpty) {
       // Safe default when no data is available
       return const PriceScale(min: 0.0, max: 100.0);
@@ -98,9 +98,9 @@ class PriceScale {
   /// - Including highs/lows would waste vertical space
   /// - This matches TradingView Lightweight Charts behavior
   factory PriceScale.fromCandlesCloseOnly(
-      List<Candle> candles, {
-        double paddingPercent = 0.05,
-      }) {
+    List<Candle> candles, {
+    double paddingPercent = 0.05,
+  }) {
     if (candles.isEmpty) {
       return const PriceScale(min: 0.0, max: 100.0);
     }
@@ -134,10 +134,10 @@ class PriceScale {
   /// This method is intentionally isolated so that
   /// padding behavior remains consistent everywhere.
   static PriceScale _createWithPadding(
-      double minPrice,
-      double maxPrice,
-      double paddingPercent,
-      ) {
+    double minPrice,
+    double maxPrice,
+    double paddingPercent,
+  ) {
     final priceRange = maxPrice - minPrice;
 
     double padding;
@@ -154,20 +154,14 @@ class PriceScale {
     // - The data point is centered vertically
     // - Labels are readable
     // - The chart does not look "collapsed"
-    if (priceRange <= 0 ||
-        (maxPrice > 0 &&
-            priceRange < (maxPrice * 0.001))) {
-      final basePrice =
-      maxPrice.abs() > 0
+    if (priceRange <= 0 || (maxPrice > 0 && priceRange < (maxPrice * 0.001))) {
+      final basePrice = maxPrice.abs() > 0
           ? maxPrice.abs()
-          : (minPrice.abs() > 0
-          ? minPrice.abs()
-          : 1.0);
+          : (minPrice.abs() > 0 ? minPrice.abs() : 1.0);
 
       // TradingView-style padding:
       // ~5% of price value, with a small minimum
-      padding =
-          (basePrice * 0.05).clamp(0.01, double.infinity);
+      padding = (basePrice * 0.05).clamp(0.01, double.infinity);
     } else {
       // ─────────────────────────────────────────────
       // Normal case: percentage-based padding
@@ -240,10 +234,10 @@ class PriceScale {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is PriceScale &&
-              runtimeType == other.runtimeType &&
-              min == other.min &&
-              max == other.max;
+      other is PriceScale &&
+          runtimeType == other.runtimeType &&
+          min == other.min &&
+          max == other.max;
 
   @override
   int get hashCode => min.hashCode ^ max.hashCode;

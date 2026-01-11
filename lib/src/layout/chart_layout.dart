@@ -147,7 +147,7 @@ class ChartLayout {
     this.yAxisGap = 8.0,
     this.xAxisGap = 4.0,
     this.yAxisLabelPadding =
-    const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+        const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
     this.xAxisLabelPadding = const EdgeInsets.symmetric(vertical: 4.0),
     this.currentPriceLabelGap = 4.0,
     this.gridToLabelGapY = 4.0,
@@ -177,8 +177,7 @@ class ChartLayout {
       xAxisGap: xAxisGap ?? this.xAxisGap,
       yAxisLabelPadding: yAxisLabelPadding ?? this.yAxisLabelPadding,
       xAxisLabelPadding: xAxisLabelPadding ?? this.xAxisLabelPadding,
-      currentPriceLabelGap:
-      currentPriceLabelGap ?? this.currentPriceLabelGap,
+      currentPriceLabelGap: currentPriceLabelGap ?? this.currentPriceLabelGap,
       gridToLabelGapY: gridToLabelGapY ?? this.gridToLabelGapY,
       gridToLabelGapX: gridToLabelGapX ?? this.gridToLabelGapX,
     );
@@ -190,16 +189,16 @@ class ChartLayout {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is ChartLayout &&
-              runtimeType == other.runtimeType &&
-              chartDataPadding == other.chartDataPadding &&
-              yAxisGap == other.yAxisGap &&
-              xAxisGap == other.xAxisGap &&
-              yAxisLabelPadding == other.yAxisLabelPadding &&
-              xAxisLabelPadding == other.xAxisLabelPadding &&
-              currentPriceLabelGap == other.currentPriceLabelGap &&
-              gridToLabelGapY == other.gridToLabelGapY &&
-              gridToLabelGapX == other.gridToLabelGapX;
+      other is ChartLayout &&
+          runtimeType == other.runtimeType &&
+          chartDataPadding == other.chartDataPadding &&
+          yAxisGap == other.yAxisGap &&
+          xAxisGap == other.xAxisGap &&
+          yAxisLabelPadding == other.yAxisLabelPadding &&
+          xAxisLabelPadding == other.xAxisLabelPadding &&
+          currentPriceLabelGap == other.currentPriceLabelGap &&
+          gridToLabelGapY == other.gridToLabelGapY &&
+          gridToLabelGapX == other.gridToLabelGapX;
 
   @override
   int get hashCode =>
