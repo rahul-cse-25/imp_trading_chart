@@ -37,14 +37,16 @@ class CurrentPriceRenderer {
       double lineEndX = chartRight;
       if (style.priceLabelStyle.show) {
         final yAxisLabelPadding = style.priceLabelStyle.padding;
-        final textStartX = chartRight + layout.yAxisGap + yAxisLabelPadding.left;
+        final textStartX =
+            chartRight + layout.yAxisGap + yAxisLabelPadding.left;
         lineEndX = textStartX - layout.gridToLabelGapY;
       }
 
       lineRenderer.drawStyledLine(
         canvas: canvas,
         start: Offset(mapper.paddingLeft, model.lineY),
-        end: Offset(lineEndX.clamp(mapper.paddingLeft, size.width), model.lineY),
+        end:
+            Offset(lineEndX.clamp(mapper.paddingLeft, size.width), model.lineY),
         paint: paint,
         lineStyle: currentPriceStyle.lineStyle,
       );
@@ -68,7 +70,8 @@ class CurrentPriceRenderer {
       textDirection: TextDirection.ltr,
     )..layout();
 
-    final labelWidth = textPainter.width + (currentPriceStyle.labelPaddingH * 2);
+    final labelWidth =
+        textPainter.width + (currentPriceStyle.labelPaddingH * 2);
     final labelHeight =
         textPainter.height + (currentPriceStyle.labelPaddingV * 2);
     final bgStartX = chartRight + layout.yAxisGap;

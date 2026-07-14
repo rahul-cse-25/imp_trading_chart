@@ -129,7 +129,8 @@ class ChartCommandExecutor {
     final total = state.candles.length;
     if (total == 0) return state;
 
-    final clampedVisible = viewportPolicy.clampVisibleCount(visibleCount, total);
+    final clampedVisible =
+        viewportPolicy.clampVisibleCount(visibleCount, total);
     final maxStart = (total - clampedVisible).clamp(0, total);
     final clampedStart = startIndex.clamp(0, maxStart);
     return _replaceViewport(

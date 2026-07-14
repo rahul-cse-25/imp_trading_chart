@@ -59,9 +59,9 @@ class AxisLabelRenderer {
         padding: yAxisLabelPadding,
         priceText: priceLabelStyle.formatter.format(price),
         centerY: mapper.priceToY(price).clamp(
-          mapper.paddingTop,
-          mapper.paddingTop + mapper.contentHeight,
-        ),
+              mapper.paddingTop,
+              mapper.paddingTop + mapper.contentHeight,
+            ),
       );
       return;
     }
@@ -81,9 +81,9 @@ class AxisLabelRenderer {
         padding: yAxisLabelPadding,
         priceText: priceLabelStyle.formatter.format(price),
         centerY: mapper.priceToY(price).clamp(
-          mapper.paddingTop,
-          mapper.paddingTop + mapper.contentHeight,
-        ),
+              mapper.paddingTop,
+              mapper.paddingTop + mapper.contentHeight,
+            ),
       );
     }
   }

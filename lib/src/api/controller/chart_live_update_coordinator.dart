@@ -112,7 +112,8 @@ class ChartLiveUpdateCoordinator {
     }
 
     if (state.followLatest ||
-        liveViewPolicy.shouldAutoFollow(state.viewport, state.viewport.totalCount)) {
+        liveViewPolicy.shouldAutoFollow(
+            state.viewport, state.viewport.totalCount)) {
       final visibleCount = viewportPolicy.clampVisibleCount(
         state.viewport.visibleCount,
         newTotalCount,

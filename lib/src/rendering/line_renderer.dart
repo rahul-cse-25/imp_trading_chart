@@ -178,7 +178,8 @@ class LineRenderer {
     final chartBottom = mapper.paddingTop + mapper.contentHeight;
 
     canvas.save();
-    canvas.clipRect(Rect.fromLTRB(chartLeft, chartTop, chartRight, chartBottom));
+    canvas
+        .clipRect(Rect.fromLTRB(chartLeft, chartTop, chartRight, chartBottom));
     _drawPathWithEffects(
       canvas: canvas,
       path: path,

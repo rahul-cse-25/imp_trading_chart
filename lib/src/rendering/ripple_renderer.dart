@@ -75,7 +75,8 @@ class RippleRenderer {
     final distanceToRight = (chartRight + layout.yAxisGap) - center.dx;
     final minVertical = math.min(distanceToTop, distanceToBottom);
     final minHorizontal = math.min(distanceToLeft, distanceToRight);
-    final maxRadius = math.min(preferredRadius, math.min(minVertical, minHorizontal));
+    final maxRadius =
+        math.min(preferredRadius, math.min(minVertical, minHorizontal));
 
     if (maxRadius < 3.0) return;
 

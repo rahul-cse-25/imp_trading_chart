@@ -137,8 +137,10 @@ class CrosshairRenderer {
       textDirection: TextDirection.ltr,
     )..layout();
 
-    final priceLabelX =
-        mapper.paddingLeft + mapper.contentWidth + style.axisStyle.yAxisPadding + 3;
+    final priceLabelX = mapper.paddingLeft +
+        mapper.contentWidth +
+        style.axisStyle.yAxisPadding +
+        3;
     var priceLabelY = model.y - pricePainter.height / 2;
     priceLabelY = priceLabelY.clamp(
       mapper.paddingTop,
@@ -191,8 +193,10 @@ class CrosshairRenderer {
       mapper.paddingLeft + mapper.contentWidth - timePainter.width,
     );
 
-    final timeLabelY =
-        mapper.paddingTop + mapper.contentHeight + style.axisStyle.xAxisPadding + 2;
+    final timeLabelY = mapper.paddingTop +
+        mapper.contentHeight +
+        style.axisStyle.xAxisPadding +
+        2;
     final timeBgRect = Rect.fromLTWH(
       timeLabelX - cs.labelPaddingH,
       timeLabelY - cs.labelPaddingV,

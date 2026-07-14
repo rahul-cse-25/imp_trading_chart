@@ -38,7 +38,8 @@ void main() {
     expect(find.byType(ImpChart), findsOneWidget);
   });
 
-  testWidgets('legacy chart usage still builds without controller', (tester) async {
+  testWidgets('legacy chart usage still builds without controller',
+      (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(

@@ -197,7 +197,8 @@ class ImpChartController extends ChangeNotifier {
   void scrollToLatest() {
     _applyState(
       _commandExecutor.scrollToLatest(_stateStore.state),
-      const ChartEvent(ChartEventType.viewportChanged, reason: 'scrollToLatest'),
+      const ChartEvent(ChartEventType.viewportChanged,
+          reason: 'scrollToLatest'),
     );
   }
 
@@ -230,7 +231,8 @@ class ImpChartController extends ChangeNotifier {
   void clearSelection() {
     _applyState(
       _commandExecutor.clearSelection(_stateStore.state),
-      const ChartEvent(ChartEventType.selectionChanged, reason: 'clearSelection'),
+      const ChartEvent(ChartEventType.selectionChanged,
+          reason: 'clearSelection'),
     );
   }
 
@@ -307,7 +309,8 @@ class ImpChartController extends ChangeNotifier {
   }
 
   void _applyState(ChartState nextState, ChartEvent event) {
-    if (identical(nextState, _stateStore.state) || nextState == _stateStore.state) {
+    if (identical(nextState, _stateStore.state) ||
+        nextState == _stateStore.state) {
       return;
     }
 

@@ -12,10 +12,10 @@ class ChartViewportPolicy {
     required this.minVisibleCount,
     required this.maxVisibleCount,
     this.nearLatestThreshold = 3,
-  }) : assert(defaultVisibleCount > 0),
-       assert(minVisibleCount > 0),
-       assert(maxVisibleCount >= minVisibleCount),
-       assert(nearLatestThreshold >= 0);
+  })  : assert(defaultVisibleCount > 0),
+        assert(minVisibleCount > 0),
+        assert(maxVisibleCount >= minVisibleCount),
+        assert(nearLatestThreshold >= 0);
 
   int resolveDefaultVisibleCount(int totalCount) {
     if (totalCount <= 0) {
