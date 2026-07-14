@@ -63,7 +63,53 @@ ImpChart Widget (State management + Gestures)
 - `ChartSelectionSnapshot`
 - `ChartRenderSnapshot`
 - `ChartEvent`
+- `ChartFollowLatestState`
 
+**Live update policy**:
+- `followingLatest`: viewport is at/near the latest candles and should keep auto-following
+- `detachedNearLatest`: viewport is near the end but follow-latest has been explicitly disabled
+- `detachedHistorical`: viewport is far enough back that live updates must not force-scroll
+- detached live updates surface a `Live` affordance in the widget so returning to latest is explicit instead of forced
+
+Current threshold:
+- within `3` candles of the dataset end is considered near-latest
+
+### Internal Controller Collaborators
+- `ChartStateStore`: immutable state holder and replacement boundary
+- `ChartCommandExecutor`: applies viewport/data commands
+- `ChartLiveUpdateCoordinator`: decides how incoming data affects the viewport
+- `ChartLiveViewPolicy`: classifies follow-latest UX state
+- `ChartViewportPolicy`: clamps viewport math and visible-count rules
+
+---
+
+## Rendering Layer
+
+### ChartPainter (`rendering/chart_painter.dart`)
+**Purpose**: Thin `CustomPainter` orchestration shell.
+
+It coordinates focused internal renderers instead of owning all drawing logic directly.
+
+### Rendering Delegates
+- `LineRenderer`: line path generation, smoothing, glow, points, dashed line utility
+- `GridRenderer`: horizontal and vertical grid placement
+- `AxisLabelRenderer`: time and price axis label layout/drawing
+- `CurrentPriceRenderer`: current price line and right-side label
+- `RippleRenderer`: latest-point pulse/ripple animation
+- `CrosshairRenderer`: tracker lines, tracker point, price/time labels
+
+### Layout Support
+- `PaddingResolver`: computes axis/current-price space before painting
+- `render_models.dart`: small immutable layout/render models used by delegates
+
+---
+
+## Widget Layer
+
+`ImpChart` is intentionally thinner than before and now delegates non-render widget concerns to internal helpers:
+- `ChartPulseCoordinator`: manages ripple animation timing/progress
+- `ChartGestureSession`: translates scale gestures into controller pan/zoom commands
+- `ChartLiveUpdateIndicator`: presents the tap-to-latest affordance when live updates arrive during detached historical viewing
 ---
 
 ## Data Models

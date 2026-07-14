@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:imp_trading_chart/imp_trading_chart.dart' show Candle;
+import 'package:imp_trading_chart/src/api/controller/chart_live_view_policy.dart';
 
 /// Public immutable description of the current viewport.
 @immutable
@@ -102,6 +103,7 @@ class ChartRenderSnapshot {
   final ChartVisibleRange visibleRange;
   final ChartSelectionSnapshot? selection;
   final bool followLatest;
+  final ChartFollowLatestState followLatestState;
   final double? latestPrice;
 
   const ChartRenderSnapshot({
@@ -111,6 +113,7 @@ class ChartRenderSnapshot {
     required this.visibleRange,
     required this.selection,
     required this.followLatest,
+    required this.followLatestState,
     required this.latestPrice,
   });
 

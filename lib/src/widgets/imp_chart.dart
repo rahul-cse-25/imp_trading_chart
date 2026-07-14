@@ -3,10 +3,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:imp_trading_chart/imp_trading_chart.dart';
-import 'package:imp_trading_chart/src/engine/chart_engine.dart' show ChartEngine;
+import 'package:imp_trading_chart/src/engine/chart_engine.dart'
+    show ChartEngine;
 import 'package:imp_trading_chart/src/layout/padding_resolver.dart';
+import 'package:imp_trading_chart/src/math/coordinate_mapper.dart';
 import 'package:imp_trading_chart/src/rendering/chart_painter.dart'
     show ChartPainter;
+import 'package:imp_trading_chart/src/widgets/chart_gesture_session.dart';
+import 'package:imp_trading_chart/src/widgets/chart_live_update_indicator.dart';
+import 'package:imp_trading_chart/src/widgets/chart_pulse_coordinator.dart';
 
 /// High-performance Flutter widget that renders a trading chart
 /// using a CustomPainter-driven rendering engine.
@@ -16,7 +21,8 @@ class ImpChart extends StatefulWidget {
   final double? currentPrice;
   final bool enableGestures;
   final void Function(ChartEngine)? onViewportChanged;
-  final void Function(ChartViewportSnapshot viewport)? onViewportSnapshotChanged;
+  final void Function(ChartViewportSnapshot viewport)?
+      onViewportSnapshotChanged;
   final void Function(ChartRenderSnapshot snapshot)? onChartStateChanged;
   final void Function(ChartEvent event)? onChartEvent;
   final int? defaultVisibleCount;
@@ -207,44 +213,41 @@ class ImpChart extends StatefulWidget {
 
 class _ImpChartState extends State<ImpChart>
     with SingleTickerProviderStateMixin {
-  static const double _zoomThreshold = 0.05;
-
-  late AnimationController _pulseController;
   final PaddingResolver _paddingResolver = const PaddingResolver();
+  final ChartGestureSession _gestureSession = ChartGestureSession();
 
+  late final ChartPulseCoordinator _pulseCoordinator;
   ImpChartController? _internalController;
   StreamSubscription<ChartEvent>? _eventSubscription;
-  Timer? _rippleTimer;
 
   double _pulseProgress = 0.0;
-  double _baseScale = 1.0;
-  double _accumulatedPanDelta = 0.0;
-  Offset? _lastPanPosition;
   Offset? _crosshairPosition;
   int? _crosshairIndex;
   Candle? _lastCrosshairCandle;
+  bool _hasPendingLatestData = false;
+  int _pendingLatestCandleCount = 0;
+  int? _lastKnownCandleCount;
+  int? _lastKnownFirstCandleTime;
 
-  ImpChartController get _controller => widget.controller ?? _internalController!;
+  ImpChartController get _controller =>
+      widget.controller ?? _internalController!;
+
   ChartEngine get _engine => _controller.engine;
 
   @override
   void initState() {
     super.initState();
     _ensureController();
-
-    final rippleStyle = widget.style.rippleStyle;
-    _pulseController = AnimationController(
+    _pulseCoordinator = ChartPulseCoordinator(
       vsync: this,
-      duration: Duration(milliseconds: rippleStyle.animationDurationMs),
-    )..addListener(_handlePulseTick);
+      onProgressChanged: _handlePulseTick,
+    );
 
-    if (widget.candles.isNotEmpty && widget.style.rippleStyle.show) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _startContinuousRipple();
-        }
-      });
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _syncPulseState();
+      }
+    });
   }
 
   @override
@@ -262,29 +265,16 @@ class _ImpChartState extends State<ImpChart>
 
     if (_didCandlesChange(oldWidget)) {
       _controller.setCandles(widget.candles);
-      _handleIncomingDataChange(oldWidget);
     }
 
-    final rippleEnabled =
-        widget.style.rippleStyle.show && widget.candles.isNotEmpty;
-    final wasRippleEnabled =
-        oldWidget.style.rippleStyle.show && oldWidget.candles.isNotEmpty;
-
-    if (rippleEnabled && !wasRippleEnabled) {
-      _startContinuousRipple();
-    } else if (!rippleEnabled && wasRippleEnabled) {
-      _stopContinuousRipple();
-    }
+    _syncPulseState();
   }
 
   @override
   void dispose() {
     _unbindController(widget.controller ?? _internalController);
     _internalController?.dispose();
-    _rippleTimer?.cancel();
-    _pulseController
-      ..removeListener(_handlePulseTick)
-      ..dispose();
+    _pulseCoordinator.dispose();
     super.dispose();
   }
 
@@ -304,6 +294,7 @@ class _ImpChartState extends State<ImpChart>
   void _bindController(ImpChartController controller) {
     controller.addListener(_handleControllerChanged);
     _eventSubscription = controller.events.listen((event) {
+      _handleChartEvent(event);
       widget.onChartEvent?.call(event);
     });
     _handleControllerChanged();
@@ -318,7 +309,7 @@ class _ImpChartState extends State<ImpChart>
   void _handlePulseTick() {
     if (!mounted) return;
     setState(() {
-      _pulseProgress = _pulseController.value;
+      _pulseProgress = _pulseCoordinator.progress;
     });
   }
 
@@ -329,6 +320,16 @@ class _ImpChartState extends State<ImpChart>
     final candle = selection?.candle;
     final visibleIndex = selection?.visibleIndex;
     final candleChanged = candle != _lastCrosshairCandle;
+    final currentCandles = _controller.candles;
+    final currentCount = currentCandles.length;
+    final currentFirstTime =
+        currentCandles.isEmpty ? null : currentCandles.first.time;
+    final seriesChanged = _lastKnownFirstCandleTime != null &&
+        currentFirstTime != null &&
+        _lastKnownFirstCandleTime != currentFirstTime;
+    final addedCandles = _lastKnownCandleCount == null || seriesChanged
+        ? 0
+        : currentCount - _lastKnownCandleCount!;
 
     if (candleChanged) {
       widget.onCrosshairChanged?.call(candle);
@@ -340,33 +341,23 @@ class _ImpChartState extends State<ImpChart>
     setState(() {
       _lastCrosshairCandle = candle;
       _crosshairIndex = visibleIndex;
+      if (_controller.isFollowingLatest || seriesChanged) {
+        _hasPendingLatestData = false;
+        _pendingLatestCandleCount = 0;
+      } else if (addedCandles > 0) {
+        _hasPendingLatestData = true;
+        _pendingLatestCandleCount += addedCandles;
+      }
       if (selection == null) {
         _crosshairPosition = null;
       }
+      _lastKnownCandleCount = currentCount;
+      _lastKnownFirstCandleTime = currentFirstTime;
     });
 
     widget.onViewportChanged?.call(_engine);
     widget.onViewportSnapshotChanged?.call(_controller.viewport);
     widget.onChartStateChanged?.call(_controller.snapshot);
-  }
-
-  void _handleIncomingDataChange(ImpChart oldWidget) {
-    final oldLength = oldWidget.candles.length;
-    final newLength = widget.candles.length;
-    final countChanged = oldLength != newLength;
-
-    final lastChanged = !countChanged &&
-        oldLength > 0 &&
-        widget.candles.isNotEmpty &&
-        oldWidget.candles.last != widget.candles.last;
-
-    if ((countChanged || lastChanged) && widget.style.rippleStyle.show) {
-      _triggerPulse();
-    }
-
-    if ((countChanged || lastChanged) && widget.plotFeedback) {
-      HapticFeedback.lightImpact();
-    }
   }
 
   bool _didCandlesChange(ImpChart oldWidget) {
@@ -400,108 +391,49 @@ class _ImpChartState extends State<ImpChart>
     return false;
   }
 
-  void _startContinuousRipple() {
-    final rippleStyle = widget.style.rippleStyle;
-    if (!mounted || widget.candles.isEmpty || !rippleStyle.show) {
-      return;
+  void _handleChartEvent(ChartEvent event) {
+    final shouldPulse = event.type == ChartEventType.liveCandleAppended ||
+        event.type == ChartEventType.liveCandleUpdated;
+
+    if (shouldPulse && widget.style.rippleStyle.show) {
+      _pulseCoordinator.trigger(
+        style: widget.style.rippleStyle,
+        enabled: widget.style.rippleStyle.show,
+        hasCandles: widget.candles.isNotEmpty,
+      );
     }
 
-    _rippleTimer?.cancel();
-    _pulseController.duration =
-        Duration(milliseconds: rippleStyle.animationDurationMs);
-    _playRippleAnimation();
+    if (shouldPulse && widget.plotFeedback) {
+      HapticFeedback.lightImpact();
+    }
 
-    final totalCycleMs =
-        rippleStyle.animationDurationMs + rippleStyle.intervalMs;
-    _rippleTimer = Timer.periodic(Duration(milliseconds: totalCycleMs), (timer) {
-      if (!mounted || widget.candles.isEmpty || !widget.style.rippleStyle.show) {
-        timer.cancel();
-        return;
-      }
-      _playRippleAnimation();
-    });
-  }
-
-  void _stopContinuousRipple() {
-    _rippleTimer?.cancel();
-    _rippleTimer = null;
-    _pulseController.stop();
-    if (mounted) {
+    if (event.type == ChartEventType.liveUpdatePreservedContext) {
       setState(() {
-        _pulseProgress = 0.0;
+        _hasPendingLatestData = true;
       });
     }
   }
 
-  void _playRippleAnimation() {
-    if (!mounted || widget.candles.isEmpty || !widget.style.rippleStyle.show) {
-      return;
-    }
-    _pulseController
-      ..reset()
-      ..forward();
-  }
-
-  void _triggerPulse() {
-    if (_rippleTimer == null || !_rippleTimer!.isActive) {
-      _startContinuousRipple();
-    }
-  }
-
   void _handleScaleStart(ScaleStartDetails details, Size size) {
-    _baseScale = 1.0;
-    _lastPanPosition = details.focalPoint;
-    _accumulatedPanDelta = 0.0;
+    _gestureSession.start(details.focalPoint);
   }
 
   void _handleScaleUpdate(ScaleUpdateDetails details, Size size) {
     if (!widget.enableGestures || widget.style.crosshairStyle.show) return;
 
-    final scaleChange = (details.scale - _baseScale).abs();
-    final isZoom = scaleChange > _zoomThreshold;
-
-    if (isZoom) {
-      final padding = _resolvePadding(size);
-      final mapper = _engine.createMapper(
-        chartWidth: size.width,
-        chartHeight: size.height,
-        paddingLeft: padding.left,
-        paddingRight: padding.right,
-        paddingTop: padding.top,
-        paddingBottom: padding.bottom,
-      );
-      final anchorIndex = mapper.xToIndex(details.focalPoint.dx);
-
-      if (anchorIndex >= 0 && anchorIndex < _engine.candles.length) {
-        _controller.zoomAround(
-          anchorIndex,
-          step: (details.scale - _baseScale) > 0 ? -1 : 1,
-        );
-      } else if ((details.scale - _baseScale) > 0) {
-        _controller.zoomIn();
-      } else {
-        _controller.zoomOut();
-      }
-
-      _baseScale = details.scale;
-      _lastPanPosition = details.focalPoint;
-      _accumulatedPanDelta = 0.0;
-      return;
-    }
-
-    if (_lastPanPosition != null) {
-      final delta = _lastPanPosition!.dx - details.focalPoint.dx;
-      _accumulatedPanDelta += delta;
-      final candleWidth = _getCandleWidth(size);
-      if (candleWidth > 0) {
-        final candleDelta = (_accumulatedPanDelta / candleWidth).round();
-        if (candleDelta.abs() >= 1) {
-          _controller.panByCandles(candleDelta);
-          _accumulatedPanDelta -= candleDelta * candleWidth;
-        }
-      }
-      _lastPanPosition = details.focalPoint;
-    }
+    final mapper = _createMapper(size);
+    _gestureSession.update(
+      details: details,
+      candleWidth: mapper.candleWidth,
+      anchorIndex: mapper.xToIndex(details.focalPoint.dx),
+      totalCount: _engine.candles.length,
+      zoomIn: _controller.zoomIn,
+      zoomOut: _controller.zoomOut,
+      zoomAround: (anchorIndex, step) {
+        _controller.zoomAround(anchorIndex, step: step);
+      },
+      panByCandles: _controller.panByCandles,
+    );
   }
 
   void _handleDoubleTap() {
@@ -531,15 +463,7 @@ class _ImpChartState extends State<ImpChart>
   }
 
   void _updateCrosshair(Offset localPosition, Size size) {
-    final padding = _resolvePadding(size);
-    final mapper = _engine.createMapper(
-      chartWidth: size.width,
-      chartHeight: size.height,
-      paddingLeft: padding.left,
-      paddingRight: padding.right,
-      paddingTop: padding.top,
-      paddingBottom: padding.bottom,
-    );
+    final mapper = _createMapper(size);
 
     final absoluteIndex = mapper.xToIndex(localPosition.dx);
     if (absoluteIndex >= 0 && absoluteIndex < _engine.candles.length) {
@@ -550,9 +474,28 @@ class _ImpChartState extends State<ImpChart>
     }
   }
 
-  double _getCandleWidth(Size size) {
+  void _handleLiveIndicatorTap() {
+    _controller.scrollToLatest();
+    if (widget.plotFeedback) {
+      HapticFeedback.selectionClick();
+    }
+    setState(() {
+      _hasPendingLatestData = false;
+      _pendingLatestCandleCount = 0;
+    });
+  }
+
+  void _syncPulseState() {
+    _pulseCoordinator.sync(
+      style: widget.style.rippleStyle,
+      enabled: widget.style.rippleStyle.show,
+      hasCandles: widget.candles.isNotEmpty,
+    );
+  }
+
+  CoordinateMapper _createMapper(Size size) {
     final padding = _resolvePadding(size);
-    final mapper = _engine.createMapper(
+    return _engine.createMapper(
       chartWidth: size.width,
       chartHeight: size.height,
       paddingLeft: padding.left,
@@ -560,7 +503,6 @@ class _ImpChartState extends State<ImpChart>
       paddingTop: padding.top,
       paddingBottom: padding.bottom,
     );
-    return mapper.candleWidth;
   }
 
   ChartPadding _resolvePadding(Size size) {
@@ -578,7 +520,7 @@ class _ImpChartState extends State<ImpChart>
       child: LayoutBuilder(
         builder: (context, constraints) {
           final size = Size(constraints.maxWidth, constraints.maxHeight);
-          final padding = _resolvePadding(size);
+          final mapper = _createMapper(size);
 
           return GestureDetector(
             onScaleStart: widget.style.crosshairStyle.show
@@ -598,24 +540,30 @@ class _ImpChartState extends State<ImpChart>
             onLongPressEnd: widget.style.crosshairStyle.show
                 ? (_) => _handleLongPressEnd()
                 : null,
-            child: CustomPaint(
-              painter: ChartPainter(
-                candles: _engine.getVisibleCandles(),
-                mapper: _engine.createMapper(
-                  chartWidth: size.width,
-                  chartHeight: size.height,
-                  paddingLeft: padding.left,
-                  paddingRight: padding.right,
-                  paddingTop: padding.top,
-                  paddingBottom: padding.bottom,
+            child: Stack(
+              children: [
+                CustomPaint(
+                  painter: ChartPainter(
+                    candles: _engine.getVisibleCandles(),
+                    mapper: mapper,
+                    style: widget.style,
+                    currentPrice:
+                        widget.currentPrice ?? _engine.getLatestPrice(),
+                    pulseProgress: _pulseProgress,
+                    crosshairPosition: _crosshairPosition,
+                    crosshairIndex: _crosshairIndex,
+                  ),
+                  size: size,
                 ),
-                style: widget.style,
-                currentPrice: widget.currentPrice ?? _engine.getLatestPrice(),
-                pulseProgress: _pulseProgress,
-                crosshairPosition: _crosshairPosition,
-                crosshairIndex: _crosshairIndex,
-              ),
-              size: size,
+                if (_hasPendingLatestData && !_controller.isFollowingLatest)
+                  ChartLiveUpdateIndicator(
+                    onTap: _handleLiveIndicatorTap,
+                    newCandleCount: _pendingLatestCandleCount <= 0
+                        ? 1
+                        : _pendingLatestCandleCount,
+                    bottomInset: mapper.paddingBottom + 8,
+                  ),
+              ],
             ),
           );
         },

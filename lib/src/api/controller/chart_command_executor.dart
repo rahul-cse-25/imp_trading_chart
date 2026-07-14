@@ -1,6 +1,7 @@
 import 'package:meta/meta.dart';
 import 'package:imp_trading_chart/imp_trading_chart.dart' show Candle;
 import 'package:imp_trading_chart/src/api/controller/chart_interaction_state.dart';
+import 'package:imp_trading_chart/src/api/controller/chart_live_view_policy.dart';
 import 'package:imp_trading_chart/src/api/controller/chart_live_update_coordinator.dart';
 import 'package:imp_trading_chart/src/api/controller/chart_state.dart';
 import 'package:imp_trading_chart/src/api/controller/chart_viewport_policy.dart';
@@ -10,10 +11,12 @@ import 'package:imp_trading_chart/src/engine/chart_viewport.dart';
 class ChartCommandExecutor {
   final ChartViewportPolicy viewportPolicy;
   final ChartLiveUpdateCoordinator liveUpdateCoordinator;
+  final ChartLiveViewPolicy liveViewPolicy;
 
   const ChartCommandExecutor({
     required this.viewportPolicy,
     required this.liveUpdateCoordinator,
+    required this.liveViewPolicy,
   });
 
   ChartState setCandles(ChartState state, List<Candle> candles) {
@@ -54,6 +57,7 @@ class ChartCommandExecutor {
     return state.copyWith(
       candles: newCandles,
       viewport: viewport,
+      followLatest: liveViewPolicy.shouldAutoFollow(viewport, newTotalCount),
       interaction: _sanitizeInteraction(
         interaction: state.interaction,
         candles: newCandles,
@@ -194,6 +198,8 @@ class ChartCommandExecutor {
 
     return state.copyWith(
       viewport: viewport,
+      followLatest:
+          liveViewPolicy.shouldAutoFollow(viewport, state.candles.length),
       interaction: _sanitizeInteraction(
         interaction: state.interaction,
         candles: state.candles,
@@ -209,7 +215,10 @@ class ChartCommandExecutor {
     required int visibleCount,
   }) {
     if (state.followLatest ||
-        state.viewport.endIndex >= (state.viewport.totalCount - 1)) {
+        liveViewPolicy.shouldAutoFollow(
+          state.viewport,
+          state.viewport.totalCount,
+        )) {
       return ChartViewport.last(visibleCount, newTotalCount);
     }
 

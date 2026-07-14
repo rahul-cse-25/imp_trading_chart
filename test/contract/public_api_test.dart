@@ -9,5 +9,25 @@ void main() {
     expect(controller.viewport, isA<ChartViewportSnapshot>());
     expect(controller.visibleRange, isA<ChartVisibleRange>());
     expect(controller.snapshot, isA<ChartRenderSnapshot>());
+    expect(controller.followLatestState, isA<ChartFollowLatestState>());
+  });
+
+  test('legacy constructors keep controller optional', () {
+    expect(
+      ImpChart.trading(candles: const <Candle>[]),
+      isA<ImpChart>(),
+    );
+    expect(
+      ImpChart.simple(candles: const <Candle>[]),
+      isA<ImpChart>(),
+    );
+    expect(
+      ImpChart.compact(candles: const <Candle>[]),
+      isA<ImpChart>(),
+    );
+    expect(
+      ImpChart.minimal(candles: const <Candle>[]),
+      isA<ImpChart>(),
+    );
   });
 }

@@ -1,5 +1,6 @@
 import 'package:meta/meta.dart';
 import 'package:imp_trading_chart/imp_trading_chart.dart' show Candle;
+import 'package:imp_trading_chart/src/api/controller/chart_live_view_policy.dart';
 import 'package:imp_trading_chart/src/api/controller/chart_state.dart';
 import 'package:imp_trading_chart/src/api/controller/chart_viewport_policy.dart';
 import 'package:imp_trading_chart/src/engine/chart_viewport.dart';
@@ -20,8 +21,12 @@ class ChartLiveUpdateResult {
 @internal
 class ChartLiveUpdateCoordinator {
   final ChartViewportPolicy viewportPolicy;
+  final ChartLiveViewPolicy liveViewPolicy;
 
-  const ChartLiveUpdateCoordinator(this.viewportPolicy);
+  const ChartLiveUpdateCoordinator({
+    required this.viewportPolicy,
+    required this.liveViewPolicy,
+  });
 
   ChartLiveUpdateResult applyTick(
     ChartState state, {
@@ -107,7 +112,7 @@ class ChartLiveUpdateCoordinator {
     }
 
     if (state.followLatest ||
-        state.viewport.endIndex >= (state.viewport.totalCount - 1)) {
+        liveViewPolicy.shouldAutoFollow(state.viewport, state.viewport.totalCount)) {
       final visibleCount = viewportPolicy.clampVisibleCount(
         state.viewport.visibleCount,
         newTotalCount,

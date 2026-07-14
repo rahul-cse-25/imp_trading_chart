@@ -8,6 +8,7 @@ enum ChartEventType {
   liveTickApplied,
   liveCandleAppended,
   liveCandleUpdated,
+  liveUpdatePreservedContext,
   reset,
 }
 

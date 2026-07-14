@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:imp_trading_chart/imp_trading_chart.dart' show Candle;
 import 'package:imp_trading_chart/src/api/controller/chart_command_executor.dart';
 import 'package:imp_trading_chart/src/api/controller/chart_events.dart';
+import 'package:imp_trading_chart/src/api/controller/chart_live_view_policy.dart';
 import 'package:imp_trading_chart/src/api/controller/chart_live_update_coordinator.dart';
 import 'package:imp_trading_chart/src/api/controller/chart_snapshots.dart';
 import 'package:imp_trading_chart/src/api/controller/chart_state.dart';
@@ -16,6 +17,7 @@ import 'package:imp_trading_chart/src/engine/chart_viewport.dart';
 /// Public orchestration API for programmatic chart control.
 class ImpChartController extends ChangeNotifier {
   final ChartViewportPolicy _viewportPolicy;
+  final ChartLiveViewPolicy _liveViewPolicy;
   final ChartStateStore _stateStore;
   final ChartCommandExecutor _commandExecutor;
   final StreamController<ChartEvent> _events =
@@ -32,6 +34,7 @@ class ImpChartController extends ChangeNotifier {
           minVisibleCount: minVisibleCount,
           maxVisibleCount: maxVisibleCount,
         ),
+        _liveViewPolicy = const ChartLiveViewPolicy(),
         _stateStore = ChartStateStore(
           ChartState(
             candles: List.unmodifiable(candles),
@@ -57,12 +60,14 @@ class ImpChartController extends ChangeNotifier {
             maxVisibleCount: maxVisibleCount,
           ),
           liveUpdateCoordinator: ChartLiveUpdateCoordinator(
-            ChartViewportPolicy(
+            viewportPolicy: ChartViewportPolicy(
               defaultVisibleCount: defaultVisibleCount,
               minVisibleCount: minVisibleCount,
               maxVisibleCount: maxVisibleCount,
             ),
+            liveViewPolicy: const ChartLiveViewPolicy(),
           ),
+          liveViewPolicy: const ChartLiveViewPolicy(),
         );
 
   Stream<ChartEvent> get events => _events.stream;
@@ -106,21 +111,28 @@ class ImpChartController extends ChangeNotifier {
   ChartRenderSnapshot get snapshot {
     final engine = _engine;
     return ChartRenderSnapshot(
-      candles: candles,
-      visibleCandles: engine.getVisibleCandles(),
+      candles: List<Candle>.unmodifiable(candles),
+      visibleCandles: List<Candle>.unmodifiable(engine.getVisibleCandles()),
       viewport: viewport,
       visibleRange: visibleRange,
       selection: selection,
       followLatest: isFollowingLatest,
+      followLatestState: followLatestState,
       latestPrice: engine.getLatestPrice(),
     );
   }
 
   bool get isFollowingLatest => _stateStore.state.followLatest;
+  ChartFollowLatestState get followLatestState => _liveViewPolicy.classify(
+        followLatest: _stateStore.state.followLatest,
+        viewport: _stateStore.state.viewport,
+        totalCount: _stateStore.state.candles.length,
+      );
   bool get hasSelection => selection != null;
   int get defaultVisibleCount => _viewportPolicy.defaultVisibleCount;
   int get minVisibleCount => _viewportPolicy.minVisibleCount;
   int get maxVisibleCount => _viewportPolicy.maxVisibleCount;
+  int get nearLatestThreshold => _liveViewPolicy.nearLatestThreshold;
 
   @internal
   ChartEngine get engine => _engine;
@@ -128,12 +140,11 @@ class ImpChartController extends ChangeNotifier {
   void bindCandles(List<Candle> candles) => setCandles(candles);
 
   void setCandles(List<Candle> candles) {
+    final previousState = _stateStore.state;
+    final nextState = _commandExecutor.setCandles(previousState, candles);
     _applyState(
-      _commandExecutor.setCandles(_stateStore.state, candles),
-      const ChartEvent(
-        ChartEventType.dataSet,
-        reason: 'setCandles',
-      ),
+      nextState,
+      _resolveSetCandlesEvent(previousState, nextState),
     );
   }
 
@@ -227,41 +238,45 @@ class ImpChartController extends ChangeNotifier {
     required int time,
     required double price,
   }) {
+    final previousState = _stateStore.state;
     final result = _commandExecutor.applyTick(
-      _stateStore.state,
+      previousState,
       time: time,
       price: price,
     );
 
     _applyState(
       result.state,
-      ChartEvent(
-        result.appendedNewCandle
-            ? ChartEventType.liveCandleAppended
-            : ChartEventType.liveCandleUpdated,
+      _resolveLiveUpdateEvent(
+        nextState: result.state,
         reason: 'applyTick',
+        appended: result.appendedNewCandle,
       ),
     );
   }
 
   void appendCandle(Candle candle) {
-    final result = _commandExecutor.appendCandle(_stateStore.state, candle);
+    final previousState = _stateStore.state;
+    final result = _commandExecutor.appendCandle(previousState, candle);
     _applyState(
       result.state,
-      const ChartEvent(
-        ChartEventType.liveCandleAppended,
+      _resolveLiveUpdateEvent(
+        nextState: result.state,
         reason: 'appendCandle',
+        appended: true,
       ),
     );
   }
 
   void updateLastCandle(Candle candle) {
-    final result = _commandExecutor.updateLastCandle(_stateStore.state, candle);
+    final previousState = _stateStore.state;
+    final result = _commandExecutor.updateLastCandle(previousState, candle);
     _applyState(
       result.state,
-      const ChartEvent(
-        ChartEventType.liveCandleUpdated,
+      _resolveLiveUpdateEvent(
+        nextState: result.state,
         reason: 'updateLastCandle',
+        appended: false,
       ),
     );
   }
@@ -299,5 +314,73 @@ class ImpChartController extends ChangeNotifier {
     _stateStore.replace(nextState);
     _events.add(event);
     notifyListeners();
+  }
+
+  ChartEvent _resolveSetCandlesEvent(
+    ChartState previousState,
+    ChartState nextState,
+  ) {
+    final previousCandles = previousState.candles;
+    final nextCandles = nextState.candles;
+    final sameSeries = previousCandles.isNotEmpty &&
+        nextCandles.isNotEmpty &&
+        previousCandles.first.time == nextCandles.first.time;
+
+    if (sameSeries && nextCandles.length > previousCandles.length) {
+      if (nextState.followLatest) {
+        return const ChartEvent(
+          ChartEventType.liveCandleAppended,
+          reason: 'setCandles',
+        );
+      }
+
+      return const ChartEvent(
+        ChartEventType.liveUpdatePreservedContext,
+        reason: 'setCandles',
+      );
+    }
+
+    if (sameSeries &&
+        nextCandles.length == previousCandles.length &&
+        nextCandles.isNotEmpty &&
+        previousCandles.isNotEmpty &&
+        nextCandles.last != previousCandles.last) {
+      if (nextState.followLatest) {
+        return const ChartEvent(
+          ChartEventType.liveCandleUpdated,
+          reason: 'setCandles',
+        );
+      }
+
+      return const ChartEvent(
+        ChartEventType.liveUpdatePreservedContext,
+        reason: 'setCandles',
+      );
+    }
+
+    return const ChartEvent(
+      ChartEventType.dataSet,
+      reason: 'setCandles',
+    );
+  }
+
+  ChartEvent _resolveLiveUpdateEvent({
+    required ChartState nextState,
+    required String reason,
+    required bool appended,
+  }) {
+    if (!nextState.followLatest) {
+      return ChartEvent(
+        ChartEventType.liveUpdatePreservedContext,
+        reason: reason,
+      );
+    }
+
+    return ChartEvent(
+      appended
+          ? ChartEventType.liveCandleAppended
+          : ChartEventType.liveCandleUpdated,
+      reason: reason,
+    );
   }
 }

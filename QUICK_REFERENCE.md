@@ -16,6 +16,20 @@ controller.showCrosshairAtIndex(250);
 controller.hideCrosshair();
 ```
 
+### Live Update Rules
+
+```dart
+controller.followLatestState
+controller.isFollowingLatest
+controller.scrollToLatest()
+controller.resetViewport()
+```
+
+- Near latest = within `3` candles of the end
+- Near latest charts keep auto-following on live updates
+- Detached historical charts preserve user context and do not jump
+- Detached historical charts show a `Live` affordance; tap it to return to latest
+
 ### Useful Snapshot Access
 
 ```dart
@@ -25,6 +39,16 @@ controller.selection
 controller.snapshot
 controller.events
 ```
+
+## Internal Architecture At A Glance
+
+- `ImpChart`: Flutter widget entry point
+- `ImpChartController`: public commands + snapshots + events
+- `ChartEngine`: internal viewport/scale/mapping engine
+- `PaddingResolver`: layout-space resolver
+- `ChartPainter`: rendering shell
+- Render delegates: `LineRenderer`, `GridRenderer`, `AxisLabelRenderer`, `CurrentPriceRenderer`, `RippleRenderer`, `CrosshairRenderer`
+- Widget helpers: `ChartPulseCoordinator`, `ChartGestureSession`, `ChartLiveUpdateIndicator`
 
 ## Common Calculations Cheat Sheet
 

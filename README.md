@@ -162,6 +162,25 @@ controller.scrollToLatest();
 controller.zoomIn();
 ```
 
+### Live Update UX
+
+`imp_trading_chart` now uses a preserve-context live-update policy:
+
+- If the chart is at or near the latest candles, it keeps following live data.
+- If the user pans into older history, incoming candles update the data without force-scrolling.
+- If live data arrives while detached, the chart shows a `Live` affordance that scrolls back to the latest candles on tap.
+- Calling `scrollToLatest()` or resetting the viewport restores follow-latest behavior.
+
+The internal near-latest threshold is currently `3` candles.
+
+### Architecture Highlights
+
+- `ImpChart` stays easy to use and keeps the controller optional.
+- `ImpChartController` is the public orchestration API for pan, zoom, reset, fit-all, scroll-to-latest, and live updates.
+- `ChartPainter` is now a rendering shell that delegates to focused internal renderers for line, grid, axis labels, current price, ripple, and crosshair drawing.
+- Widget-only mechanics are split into focused internal helpers for pulse animation, gesture translation, and live-update affordances.
+- `PaddingResolver` owns axis/current-price layout spacing so renderers stay drawing-focused.
+
 ---
 
 ## 🕯 Candle Model
@@ -213,9 +232,9 @@ Only these are public & stable:
 
 ## 🚧 Roadmap
 
-* Programmatic zoom / pan API
 * Indicator overlays (MA, EMA, VWAP)
-* Renderer decomposition and golden coverage
+* Additional theme presets
+* Extended visual regression coverage
 
 ---
 
