@@ -133,7 +133,7 @@ CustomPainter (pixels only)
 
 ```yaml
 dependencies:
-  imp_trading_chart: ^0.1.0
+  imp_trading_chart: ^0.2.0
 ```
 
 ---
