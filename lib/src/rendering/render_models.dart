@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:imp_trading_chart/imp_trading_chart.dart' show Candle;
 
+/// Immutable layout description for a resolved axis label.
 @immutable
 class AxisLabelLayoutSnapshot {
   const AxisLabelLayoutSnapshot({
@@ -20,6 +21,7 @@ class AxisLabelLayoutSnapshot {
   final bool isLast;
 }
 
+/// Immutable rendering description for the current price overlay.
 @immutable
 class CurrentPriceRenderModel {
   const CurrentPriceRenderModel({
@@ -35,6 +37,7 @@ class CurrentPriceRenderModel {
   final bool isPriceVisible;
 }
 
+/// Immutable rendering description for the active crosshair target.
 @immutable
 class CrosshairRenderModel {
   const CrosshairRenderModel({

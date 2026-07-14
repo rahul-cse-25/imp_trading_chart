@@ -12,6 +12,10 @@ import 'package:imp_trading_chart/src/rendering/line_renderer.dart';
 import 'package:imp_trading_chart/src/rendering/ripple_renderer.dart';
 
 /// Stateless orchestration shell for chart rendering delegates.
+///
+/// `ChartPainter` coordinates focused render delegates instead of owning all
+/// draw logic directly. This keeps rendering responsibilities isolated and
+/// avoids coupling painter internals to controller or widget orchestration.
 @internal
 class ChartPainter extends CustomPainter {
   static const LineRenderer _lineRenderer = LineRenderer();
@@ -126,6 +130,7 @@ class ChartPainter extends CustomPainter {
     }
   }
 
+  /// Repaints only when a visible rendering input materially changes.
   @override
   bool shouldRepaint(ChartPainter oldDelegate) {
     if (candles.length != oldDelegate.candles.length) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:imp_trading_chart_example/controller_lab_screen.dart';
 import 'package:imp_trading_chart_example/showcase_screen.dart';
 
 import 'chart_example.dart';
@@ -8,8 +9,9 @@ import 'chart_example.dart';
 /// ═══════════════════════════════════════════════════════════════════════════
 ///
 /// Beautiful landing page with navigation to:
-/// - Original examples (factory constructors)
-/// - New showcase gallery (5 themed charts)
+/// - original examples (factory constructors)
+/// - themed showcase gallery
+/// - controller lab for programmatic chart control
 class MainNavigationScreen extends StatelessWidget {
   const MainNavigationScreen({super.key});
 
@@ -120,6 +122,24 @@ class MainNavigationScreen extends StatelessWidget {
                                 ),
                               ),
                               isNew: true,
+                            ),
+                            const SizedBox(height: 16),
+                            _NavigationCard(
+                              title: 'Controller Lab',
+                              subtitle:
+                                  'Programmatic pan, zoom, reset, and live control',
+                              icon: Icons.tune_rounded,
+                              gradientColors: const [
+                                Color(0xFF2FD67B),
+                                Color(0xFF4EA1FF)
+                              ],
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const ControllerLabScreen(),
+                                ),
+                              ),
                             ),
                             const SizedBox(height: 16),
                             // Original Examples Card

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+/// Compact in-chart affordance for returning to the latest candle.
+///
+/// The indicator is intentionally placed just above the X-axis band so it feels
+/// attached to the charted data without overlapping axis labels.
 class ChartLiveUpdateIndicator extends StatelessWidget {
   const ChartLiveUpdateIndicator({
     super.key,
@@ -9,7 +13,11 @@ class ChartLiveUpdateIndicator extends StatelessWidget {
   });
 
   final VoidCallback onTap;
+
+  /// Number of newly appended candles received while detached from latest.
   final int newCandleCount;
+
+  /// Distance from the bottom edge used to float the control above the X-axis.
   final double bottomInset;
 
   @override

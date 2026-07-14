@@ -11,10 +11,12 @@ import 'package:imp_trading_chart/src/math/coordinate_mapper.dart'
 import 'package:imp_trading_chart/src/rendering/line_renderer.dart';
 import 'package:imp_trading_chart/src/rendering/render_models.dart';
 
+/// Draws the crosshair overlay, tracker point, and crosshair labels.
 @internal
 class CrosshairRenderer {
   const CrosshairRenderer();
 
+  /// Paints the crosshair overlay if the selected visible index is valid.
   void draw({
     required Canvas canvas,
     required List<Candle> candles,

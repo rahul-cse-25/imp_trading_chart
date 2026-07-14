@@ -20,6 +20,10 @@ class ChartCommandExecutor {
   });
 
   ChartState setCandles(ChartState state, List<Candle> candles) {
+    if (_isEquivalentDataset(state.candles, candles)) {
+      return state;
+    }
+
     final List<Candle> newCandles = List<Candle>.unmodifiable(candles);
     final newTotalCount = newCandles.length;
 
@@ -250,5 +254,25 @@ class ChartCommandExecutor {
       absoluteIndex: selectedAbsoluteIndex,
       candle: candles[selectedAbsoluteIndex],
     );
+  }
+
+  bool _isEquivalentDataset(List<Candle> previous, List<Candle> next) {
+    if (identical(previous, next)) {
+      return true;
+    }
+
+    if (previous.length != next.length) {
+      return false;
+    }
+
+    if (previous.isEmpty && next.isEmpty) {
+      return true;
+    }
+
+    if (previous.isEmpty || next.isEmpty) {
+      return false;
+    }
+
+    return previous.first == next.first && previous.last == next.last;
   }
 }

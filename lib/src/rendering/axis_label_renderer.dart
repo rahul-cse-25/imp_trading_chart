@@ -11,10 +11,12 @@ import 'package:imp_trading_chart/src/math/coordinate_mapper.dart'
     show CoordinateMapper;
 import 'package:imp_trading_chart/src/rendering/render_models.dart';
 
+/// Draws X-axis time labels and Y-axis price labels.
 @internal
 class AxisLabelRenderer {
   const AxisLabelRenderer();
 
+  /// Paints price labels on the right-side axis.
   void drawPriceLabels({
     required Canvas canvas,
     required List<Candle> candles,
@@ -88,6 +90,7 @@ class AxisLabelRenderer {
     }
   }
 
+  /// Paints time labels on the bottom axis.
   void drawTimeLabels({
     required Canvas canvas,
     required List<Candle> candles,

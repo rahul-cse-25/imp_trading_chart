@@ -8,10 +8,12 @@ import 'package:imp_trading_chart/src/math/coordinate_mapper.dart'
     show CoordinateMapper;
 import 'package:imp_trading_chart/src/rendering/line_renderer.dart';
 
+/// Draws horizontal and vertical grid lines for the chart viewport.
 @internal
 class GridRenderer {
   const GridRenderer();
 
+  /// Paints the grid using already-resolved viewport and layout spacing.
   void draw({
     required Canvas canvas,
     required Size size,

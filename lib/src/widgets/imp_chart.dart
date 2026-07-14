@@ -15,22 +15,60 @@ import 'package:imp_trading_chart/src/widgets/chart_pulse_coordinator.dart';
 
 /// High-performance Flutter widget that renders a trading chart
 /// using a CustomPainter-driven rendering engine.
+///
+/// Public design goals:
+/// - keep widget usage simple for package consumers
+/// - preserve compatibility with existing `candles:`-driven integrations
+/// - support advanced orchestration through an optional controller
+///
+/// Runtime responsibilities:
+/// - bind Flutter lifecycle to chart controller state
+/// - translate gestures into controller commands
+/// - compose the paint surface and widget-only overlays
+/// - forward legacy callbacks alongside newer snapshot/event APIs
 class ImpChart extends StatefulWidget {
+  /// Candle dataset rendered by the chart.
   final List<Candle> candles;
+
+  /// Visual configuration for chart rendering.
   final ChartStyle style;
+
+  /// Optional explicit current price override.
   final double? currentPrice;
+
+  /// Whether user gesture interactions are enabled.
   final bool enableGestures;
+
+  /// Legacy engine callback preserved for backward compatibility.
   final void Function(ChartEngine)? onViewportChanged;
+
+  /// Snapshot callback for viewport-only observation.
   final void Function(ChartViewportSnapshot viewport)?
       onViewportSnapshotChanged;
+
+  /// Snapshot callback for the full controller-visible render state.
   final void Function(ChartRenderSnapshot snapshot)? onChartStateChanged;
+
+  /// Semantic event callback for resets, live updates, and other chart events.
   final void Function(ChartEvent event)? onChartEvent;
+
+  /// Optional default visible count used by internally managed controllers.
   final int? defaultVisibleCount;
+
+  /// Callback fired when the selected crosshair candle changes.
   final void Function(Candle? candle)? onCrosshairChanged;
+
+  /// Whether live data feedback may trigger light haptics.
   final bool plotFeedback;
+
+  /// Whether crosshair selection changes may trigger light haptics.
   final bool crosshairChangeFeedback;
+
+  /// Optional external controller. If omitted, the widget manages an internal
+  /// controller automatically.
   final ImpChartController? controller;
 
+  /// Creates a configurable chart widget with optional controller injection.
   ImpChart({
     super.key,
     required this.candles,
@@ -51,6 +89,7 @@ class ImpChart extends StatefulWidget {
   @override
   State<ImpChart> createState() => _ImpChartState();
 
+  /// Minimal sparkline-style preset with gestures disabled by default.
   factory ImpChart.minimal({
     required List<Candle> candles,
     Color? lineColor,
@@ -86,6 +125,7 @@ class ImpChart extends StatefulWidget {
     );
   }
 
+  /// Lightweight line-chart preset for simple read-only chart use cases.
   factory ImpChart.simple({
     required List<Candle> candles,
     Color? lineColor,
@@ -126,6 +166,7 @@ class ImpChart extends StatefulWidget {
     );
   }
 
+  /// Full trading-oriented preset with richer live and interaction visuals.
   factory ImpChart.trading({
     Key? key,
     required List<Candle> candles,
@@ -168,6 +209,7 @@ class ImpChart extends StatefulWidget {
     );
   }
 
+  /// Dashboard-friendly preset balancing compactness and readability.
   factory ImpChart.compact({
     required List<Candle> candles,
     Color? lineColor,
@@ -211,6 +253,13 @@ class ImpChart extends StatefulWidget {
   }
 }
 
+/// Private Flutter binding state for [ImpChart].
+///
+/// This state object intentionally owns only widget-facing concerns:
+/// - controller binding/lifecycle
+/// - widget-only animation progress
+/// - crosshair overlay position
+/// - detached-live indicator visibility
 class _ImpChartState extends State<ImpChart>
     with SingleTickerProviderStateMixin {
   final PaddingResolver _paddingResolver = const PaddingResolver();
@@ -228,6 +277,7 @@ class _ImpChartState extends State<ImpChart>
   int _pendingLatestCandleCount = 0;
   int? _lastKnownCandleCount;
   int? _lastKnownFirstCandleTime;
+  bool _externalSyncScheduled = false;
 
   ImpChartController get _controller =>
       widget.controller ?? _internalController!;
@@ -264,7 +314,7 @@ class _ImpChartState extends State<ImpChart>
     }
 
     if (_didCandlesChange(oldWidget)) {
-      _controller.setCandles(widget.candles);
+      _syncControllerCandles();
     }
 
     _syncPulseState();
@@ -284,13 +334,14 @@ class _ImpChartState extends State<ImpChart>
         candles: widget.candles,
         defaultVisibleCount: widget.defaultVisibleCount ?? 100,
       );
-    } else {
-      widget.controller!.setCandles(widget.candles);
+    } else if (_shouldSyncExternalController(widget.controller!)) {
+      _scheduleExternalControllerSync(widget.controller!);
     }
 
     _bindController(_controller);
   }
 
+  /// Subscribes widget listeners to the active controller instance.
   void _bindController(ImpChartController controller) {
     controller.addListener(_handleControllerChanged);
     _eventSubscription = controller.events.listen((event) {
@@ -300,12 +351,14 @@ class _ImpChartState extends State<ImpChart>
     _handleControllerChanged();
   }
 
+  /// Removes widget listeners from the previously active controller instance.
   void _unbindController(ImpChartController? controller) {
     controller?.removeListener(_handleControllerChanged);
     _eventSubscription?.cancel();
     _eventSubscription = null;
   }
 
+  /// Mirrors pulse animation progress into widget state for repainting.
   void _handlePulseTick() {
     if (!mounted) return;
     setState(() {
@@ -313,6 +366,7 @@ class _ImpChartState extends State<ImpChart>
     });
   }
 
+  /// Responds to controller state changes and forwards public callbacks.
   void _handleControllerChanged() {
     if (!mounted) return;
 
@@ -360,6 +414,7 @@ class _ImpChartState extends State<ImpChart>
     widget.onChartStateChanged?.call(_controller.snapshot);
   }
 
+  /// Detects meaningful candle input changes, including in-place list mutation.
   bool _didCandlesChange(ImpChart oldWidget) {
     final previousCandles = _controller.candles;
     final currentCandles = widget.candles;
@@ -391,6 +446,68 @@ class _ImpChartState extends State<ImpChart>
     return false;
   }
 
+  /// Returns `true` when the external controller needs to be synchronized with
+  /// the current widget candle input.
+  bool _shouldSyncExternalController(ImpChartController controller) {
+    final previousCandles = controller.candles;
+    final currentCandles = widget.candles;
+
+    if (identical(previousCandles, currentCandles)) {
+      return false;
+    }
+
+    if (currentCandles.length != previousCandles.length) {
+      return true;
+    }
+
+    if (currentCandles.isEmpty && previousCandles.isEmpty) {
+      return false;
+    }
+
+    if (currentCandles.isEmpty || previousCandles.isEmpty) {
+      return true;
+    }
+
+    return currentCandles.first != previousCandles.first ||
+        currentCandles.last != previousCandles.last;
+  }
+
+  /// Synchronizes widget candles into the active controller.
+  ///
+  /// Internal controllers can be updated immediately because the widget owns
+  /// their lifecycle. External controllers are synchronized after the current
+  /// frame so ancestor listeners are never notified during build.
+  void _syncControllerCandles() {
+    if (widget.controller == null) {
+      _controller.setCandles(widget.candles);
+      return;
+    }
+
+    if (_shouldSyncExternalController(widget.controller!)) {
+      _scheduleExternalControllerSync(widget.controller!);
+    }
+  }
+
+  /// Schedules candle synchronization for an external controller after build.
+  void _scheduleExternalControllerSync(ImpChartController controller) {
+    if (_externalSyncScheduled) {
+      return;
+    }
+
+    _externalSyncScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _externalSyncScheduled = false;
+      if (!mounted || widget.controller != controller) {
+        return;
+      }
+
+      if (_shouldSyncExternalController(controller)) {
+        controller.setCandles(widget.candles);
+      }
+    });
+  }
+
+  /// Handles semantic chart events emitted by the controller.
   void _handleChartEvent(ChartEvent event) {
     final shouldPulse = event.type == ChartEventType.liveCandleAppended ||
         event.type == ChartEventType.liveCandleUpdated;
@@ -414,10 +531,12 @@ class _ImpChartState extends State<ImpChart>
     }
   }
 
+  /// Starts a new scale gesture tracking session.
   void _handleScaleStart(ScaleStartDetails details, Size size) {
     _gestureSession.start(details.focalPoint);
   }
 
+  /// Routes the current scale update through the gesture session helper.
   void _handleScaleUpdate(ScaleUpdateDetails details, Size size) {
     if (!widget.enableGestures || widget.style.crosshairStyle.show) return;
 
@@ -436,16 +555,19 @@ class _ImpChartState extends State<ImpChart>
     );
   }
 
+  /// Resets the viewport back to the controller's latest-following state.
   void _handleDoubleTap() {
     if (!widget.enableGestures || widget.style.crosshairStyle.show) return;
     _controller.resetViewport();
   }
 
+  /// Begins crosshair tracking from a long-press gesture.
   void _handleLongPressStart(LongPressStartDetails details, Size size) {
     if (!widget.enableGestures || !widget.style.crosshairStyle.show) return;
     _updateCrosshair(details.localPosition, size);
   }
 
+  /// Updates the active crosshair selection while the press moves.
   void _handleLongPressMoveUpdate(
     LongPressMoveUpdateDetails details,
     Size size,
@@ -454,6 +576,7 @@ class _ImpChartState extends State<ImpChart>
     _updateCrosshair(details.localPosition, size);
   }
 
+  /// Clears crosshair selection when the long press ends.
   void _handleLongPressEnd() {
     _controller.hideCrosshair();
     setState(() {
@@ -462,6 +585,8 @@ class _ImpChartState extends State<ImpChart>
     });
   }
 
+  /// Resolves the candle under the current local position and updates
+  /// controller selection accordingly.
   void _updateCrosshair(Offset localPosition, Size size) {
     final mapper = _createMapper(size);
 
@@ -474,6 +599,7 @@ class _ImpChartState extends State<ImpChart>
     }
   }
 
+  /// Returns the detached viewport to the latest candle position.
   void _handleLiveIndicatorTap() {
     _controller.scrollToLatest();
     if (widget.plotFeedback) {
@@ -485,6 +611,7 @@ class _ImpChartState extends State<ImpChart>
     });
   }
 
+  /// Keeps the repeating ripple state aligned with current widget inputs.
   void _syncPulseState() {
     _pulseCoordinator.sync(
       style: widget.style.rippleStyle,
@@ -493,6 +620,7 @@ class _ImpChartState extends State<ImpChart>
     );
   }
 
+  /// Creates a coordinate mapper for the current widget size and chart padding.
   CoordinateMapper _createMapper(Size size) {
     final padding = _resolvePadding(size);
     return _engine.createMapper(
@@ -505,6 +633,7 @@ class _ImpChartState extends State<ImpChart>
     );
   }
 
+  /// Resolves chart padding for the current size and visible state.
   ChartPadding _resolvePadding(Size size) {
     return _paddingResolver.resolve(
       size: size,

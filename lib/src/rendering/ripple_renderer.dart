@@ -8,10 +8,12 @@ import 'package:imp_trading_chart/imp_trading_chart.dart'
 import 'package:imp_trading_chart/src/math/coordinate_mapper.dart'
     show CoordinateMapper;
 
+/// Draws the animated latest-point ripple and center marker.
 @internal
 class RippleRenderer {
   const RippleRenderer();
 
+  /// Paints the latest-point pulse if the latest candle is visible.
   void draw({
     required Canvas canvas,
     required List<Candle> candles,

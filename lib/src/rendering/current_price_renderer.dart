@@ -7,10 +7,12 @@ import 'package:imp_trading_chart/src/math/coordinate_mapper.dart'
 import 'package:imp_trading_chart/src/rendering/line_renderer.dart';
 import 'package:imp_trading_chart/src/rendering/render_models.dart';
 
+/// Draws the current price line and its aligned right-side label.
 @internal
 class CurrentPriceRenderer {
   const CurrentPriceRenderer();
 
+  /// Paints the current price overlay for the visible viewport.
   void draw({
     required Canvas canvas,
     required Size size,

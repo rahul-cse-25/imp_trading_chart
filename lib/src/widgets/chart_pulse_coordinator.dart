@@ -3,6 +3,10 @@ import 'dart:async';
 import 'package:flutter/animation.dart';
 import 'package:imp_trading_chart/src/theme/ripple_animation_style.dart';
 
+/// Coordinates the repeating ripple animation used for the latest data point.
+///
+/// This helper keeps timer and animation-controller responsibilities out of the
+/// chart widget state so `ImpChart` stays focused on binding and composition.
 class ChartPulseCoordinator {
   ChartPulseCoordinator({
     required TickerProvider vsync,
@@ -19,8 +23,10 @@ class ChartPulseCoordinator {
   final AnimationController _controller;
   Timer? _timer;
 
+  /// Current animation progress in the `[0, 1]` range.
   double get progress => _controller.value;
 
+  /// Aligns the pulse cycle with the current ripple visibility state.
   void sync({
     required RippleAnimationStyle style,
     required bool enabled,
@@ -37,6 +43,7 @@ class ChartPulseCoordinator {
     }
   }
 
+  /// Forces an immediate pulse while preserving the repeating cycle.
   void trigger({
     required RippleAnimationStyle style,
     required bool enabled,
@@ -55,6 +62,7 @@ class ChartPulseCoordinator {
     _play();
   }
 
+  /// Stops the pulse cycle and optionally resets the visual progress.
   void stop({bool resetProgress = false}) {
     _timer?.cancel();
     _timer = null;
@@ -65,6 +73,7 @@ class ChartPulseCoordinator {
     }
   }
 
+  /// Disposes the owned timer and animation resources.
   void dispose() {
     _timer?.cancel();
     _controller

@@ -9,10 +9,12 @@ import 'package:imp_trading_chart/src/data/enums.dart' show LineStyle;
 import 'package:imp_trading_chart/src/math/coordinate_mapper.dart'
     show CoordinateMapper;
 
+/// Draws the main visible price series and shared styled line primitives.
 @internal
 class LineRenderer {
   const LineRenderer();
 
+  /// Draws the visible candle series according to the configured line style.
   void drawSeries({
     required Canvas canvas,
     required List<Candle> candles,
@@ -49,6 +51,7 @@ class LineRenderer {
     );
   }
 
+  /// Draws a solid, dashed, or dotted line segment.
   void drawStyledLine({
     required Canvas canvas,
     required Offset start,

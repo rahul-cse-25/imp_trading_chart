@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+/// Tracks an in-progress scale gesture and emits semantic chart commands.
+///
+/// The chart widget delegates scale bookkeeping here so controller-oriented
+/// gesture behavior stays isolated from widget composition code.
 class ChartGestureSession {
   ChartGestureSession({
     this.zoomThreshold = 0.05,
@@ -11,12 +15,14 @@ class ChartGestureSession {
   double _accumulatedPanDelta = 0.0;
   Offset? _lastPanPosition;
 
+  /// Starts a new gesture session from the given focal point.
   void start(Offset focalPoint) {
     _baseScale = 1.0;
     _lastPanPosition = focalPoint;
     _accumulatedPanDelta = 0.0;
   }
 
+  /// Consumes a scale update and translates it into zoom or pan commands.
   void update({
     required ScaleUpdateDetails details,
     required double candleWidth,

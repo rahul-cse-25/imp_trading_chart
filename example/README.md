@@ -25,6 +25,11 @@ This project is designed to showcase **best practices**, **factory-based APIs**,
     - High/Low tracking per tick
     - Time-aligned candle generation
 
+- 🎛️ **Controller Lab**
+    - External `ImpChartController` usage
+    - Programmatic pan, zoom, fit-all, reset, and scroll-to-latest
+    - Manual and live update actions to verify controller behavior
+
 - 🧭 **Interactive Trading Tools**
     - Crosshair with price & time labels
     - Current price indicator
@@ -43,6 +48,7 @@ This project is designed to showcase **best practices**, **factory-based APIs**,
 This example is built to:
 
 - Demonstrate **all factory constructors** of `ImpChart`
+- Demonstrate **controller-centered integrations**
 - Showcase **realistic trading data behavior**
 - Provide a **ready reference** for:
     - Live charts
