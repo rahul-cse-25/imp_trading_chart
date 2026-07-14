@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- Added public `ImpChartController` for programmatic chart control without exposing internal engine types
+- Added public controller snapshots and event APIs:
+  `ChartViewportSnapshot`, `ChartVisibleRange`, `ChartSelectionSnapshot`, `ChartRenderSnapshot`, and `ChartEvent`
+- Added initial package test foundation under `test/unit`, `test/widget`, and `test/contract`
+
+### Changed
+- Updated `ImpChart` and all factory constructors to accept an optional `controller` while preserving existing usage
+- Added snapshot-based observation hooks on `ImpChart` for viewport/state/event monitoring
+- Extracted chart padding logic into a reusable `PaddingResolver`
+
+### Internal
+- Introduced controller-side collaborators for state storage, command execution, live update handling, interaction state, and viewport policy
+- Began the internal migration toward a controller-centered architecture without breaking existing public widget calls
+
 ## 0.1.2
 
 ### Added

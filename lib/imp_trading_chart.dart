@@ -68,6 +68,11 @@ export 'src/data/enums.dart';
 export 'src/formatters/price_formatter.dart';
 export 'src/formatters/time_formatter.dart';
 
+/// Public controller and snapshot APIs.
+export 'src/api/controller/chart_events.dart';
+export 'src/api/controller/chart_snapshots.dart';
+export 'src/api/controller/imp_chart_controller.dart';
+
 /// ─────────────────────────────────────────────────────────
 /// 🎨 STYLING & LAYOUT CONFIGURATION
 /// ─────────────────────────────────────────────────────────

@@ -6,9 +6,10 @@
 3. [Engine Layer](#engine-layer)
 4. [Rendering Layer](#rendering-layer)
 5. [Widget Layer](#widget-layer)
-6. [Coordinate System](#coordinate-system)
-7. [Layout System](#layout-system)
-8. [Example Calculations](#example-calculations)
+6. [Controller Layer](#controller-layer)
+7. [Coordinate System](#coordinate-system)
+8. [Layout System](#layout-system)
+9. [Example Calculations](#example-calculations)
 
 ---
 
@@ -33,6 +34,35 @@ ImpChart Widget (State management + Gestures)
 3. **Cached calculations**: PriceScale calculated once, reused
 4. **Stateless painter**: No state mutations in paint()
 5. **Immutable engine**: All updates create new instances
+6. **Optional public controller**: advanced integrations can use `ImpChartController` without requiring internal engine imports
+
+---
+
+## Controller Layer
+
+### ImpChartController (`api/controller/imp_chart_controller.dart`)
+
+**Purpose**: Public orchestration API for programmatic control and safe observation.
+
+**Responsibilities**:
+- bind/replace candles
+- pan / zoom / reset / fit-all / scroll-to-latest
+- follow-latest state
+- crosshair selection state
+- immutable viewport and render snapshots
+- event emission for observational integrations
+
+**Why it exists**:
+- keeps `ImpChart` easy for simple users
+- gives advanced consumers a stable control surface
+- avoids leaking `ChartEngine` as the required integration model
+
+**Key public types**:
+- `ChartViewportSnapshot`
+- `ChartVisibleRange`
+- `ChartSelectionSnapshot`
+- `ChartRenderSnapshot`
+- `ChartEvent`
 
 ---
 

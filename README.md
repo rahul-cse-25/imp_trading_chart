@@ -146,6 +146,22 @@ ImpChart.trading(
 );
 ```
 
+### Controller Usage
+
+```dart
+final controller = ImpChartController(
+  defaultVisibleCount: 120,
+);
+
+ImpChart.trading(
+  candles: candles,
+  controller: controller,
+);
+
+controller.scrollToLatest();
+controller.zoomIn();
+```
+
 ---
 
 ## 🕯 Candle Model
@@ -187,6 +203,7 @@ flutter run
 Only these are public & stable:
 
 * `ImpChart`
+* `ImpChartController`
 * `Candle`
 * `ChartStyle`
 * `ChartLayout`
@@ -196,9 +213,9 @@ Only these are public & stable:
 
 ## 🚧 Roadmap
 
-* Public `ChartController`
 * Programmatic zoom / pan API
 * Indicator overlays (MA, EMA, VWAP)
+* Renderer decomposition and golden coverage
 
 ---
 

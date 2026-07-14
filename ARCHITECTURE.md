@@ -15,10 +15,36 @@ graph TD
     F --> G[ImpChart Widget]
 ```
 
+## Controller-Centered Runtime Flow
+
+```mermaid
+graph TD
+    A[App Code] --> B[ImpChartController]
+    B --> C[ChartStateStore]
+    B --> D[ChartCommandExecutor]
+    D --> E[ChartEngine]
+    E --> F[PaddingResolver]
+    F --> G[ChartPainter]
+    G --> H[ImpChart Widget]
+```
+
+### Package Layers
+- **Public API**: `ImpChart`, `ImpChartController`, snapshots, events, styles, data models
+- **Controller Layer**: command execution, follow-latest behavior, selection state, event emission
+- **Core Engine Layer**: viewport math, price scale, coordinate mapping, visible-range computation
+- **Rendering/Layout Layer**: padding resolution, painter orchestration, draw delegates
+
 ### 1. ChartEngine
 The `ChartEngine` is the brain of the package. It holds the immutable state of the chart, including the full list of candles and the current viewport.
 - **Immutability**: Every update creates a new engine instance, making the state predictable and easy to reason about.
 - **Caching**: It caches the `PriceScale` to avoid recalculating min/max prices on every frame unless the viewport changes.
+
+### 1.1 ImpChartController
+`ImpChartController` is now the public orchestration layer for advanced integrations.
+- **Programmatic control**: pan, zoom, reset, fit-all, scroll-to-latest
+- **Observation**: immutable viewport/state snapshots and event stream
+- **Safety**: keeps internal engine types out of the public integration path
+- **Compatibility**: remains optional; legacy `ImpChart(...candles: ...)` usage still works
 
 ### 2. Viewport (`ChartViewport`)
 The viewport defines exactly which portion of the data is currently visible on the screen.

@@ -1,5 +1,31 @@
 # ImpChart Quick Reference Guide
 
+## Controller Quick Commands
+
+```dart
+final controller = ImpChartController(defaultVisibleCount: 120);
+
+controller.setCandles(candles);
+controller.panByCandles(10);
+controller.zoomIn();
+controller.zoomOut();
+controller.resetViewport();
+controller.fitAll();
+controller.scrollToLatest();
+controller.showCrosshairAtIndex(250);
+controller.hideCrosshair();
+```
+
+### Useful Snapshot Access
+
+```dart
+controller.viewport
+controller.visibleRange
+controller.selection
+controller.snapshot
+controller.events
+```
+
 ## Common Calculations Cheat Sheet
 
 ### 1. Viewport Calculations
