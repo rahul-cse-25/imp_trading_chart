@@ -10,7 +10,7 @@ import 'package:imp_trading_chart/imp_trading_chart.dart';
 /// package users. It demonstrates:
 /// - one shared external controller as the single source of truth
 /// - two synchronized chart widgets powered by the same controller
-/// - a draggable primary chart and a locked secondary mirror chart
+/// - independent gesture modes on a shared controller
 /// - programmatic pan, zoom, fit-all, reset, and scroll-to-latest actions
 /// - direct controller-driven append/update flows without parent/widget hacks
 class ControllerLabScreen extends StatefulWidget {
@@ -25,6 +25,8 @@ class _ControllerLabScreenState extends State<ControllerLabScreen> {
   late final ImpChartController _controller;
   Timer? _liveTimer;
   bool _isLive = false;
+  ChartGestureMode _primaryMode = ChartGestureMode.mixed;
+  ChartGestureMode _mirrorMode = ChartGestureMode.none;
 
   @override
   void initState() {
@@ -102,54 +104,65 @@ class _ControllerLabScreenState extends State<ControllerLabScreen> {
                     _buildHeroStatus(snapshot),
                     const SizedBox(height: 16),
                     Expanded(
-                      child: Row(
-                        children: [
-                          Expanded(
-                            flex: 8,
-                            child: Column(
-                              children: [
-                                Expanded(
-                                  flex: 7,
-                                  child: _ChartPanel(
-                                    title: 'Primary View',
-                                    subtitle:
-                                        'Same controller, gestures locked',
-                                    accent: const Color(0xFF35D48A),
-                                    child: ImpChart.trading(
-                                      candles: candles,
-                                      controller: _controller,
-                                      currentPrice: currentPrice,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 14),
-                                Expanded(
-                                  flex: 4,
-                                  child: _ChartPanel(
-                                    title: 'Mirror View',
-                                    subtitle:
-                                        'Drag horizontally to inspect history',
-                                    accent: const Color(0xFF4EA1FF),
-                                    child: ImpChart.compact(
-                                      candles: candles,
-                                      controller: _controller,
-                                      currentPrice: currentPrice,
-                                      enableGestures: true,
-                                      showGrid: true,
-                                      showPriceLabels: true,
-                                      showTimeLabels: true,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final primary = _ChartPanel(
+                            title: 'Primary View',
+                            subtitle: 'Gesture mode: ${_primaryMode.name}',
+                            accent: const Color(0xFF35D48A),
+                            child: ImpChart.trading(
+                              candles: candles,
+                              controller: _controller,
+                              currentPrice: currentPrice,
+                              gestureMode: _primaryMode,
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            flex: 5,
-                            child: _buildCommandSidebar(snapshot),
-                          ),
-                        ],
+                          );
+                          final mirror = _ChartPanel(
+                            title: 'Mirror View',
+                            subtitle: 'Gesture mode: ${_mirrorMode.name}',
+                            accent: const Color(0xFF4EA1FF),
+                            child: ImpChart.compact(
+                              candles: candles,
+                              controller: _controller,
+                              currentPrice: currentPrice,
+                              gestureMode: _mirrorMode,
+                            ),
+                          );
+
+                          if (constraints.maxWidth < 800) {
+                            return SingleChildScrollView(
+                              child: Column(
+                                children: [
+                                  SizedBox(height: 290, child: primary),
+                                  const SizedBox(height: 14),
+                                  SizedBox(height: 190, child: mirror),
+                                  const SizedBox(height: 14),
+                                  _buildCommandSidebar(snapshot),
+                                ],
+                              ),
+                            );
+                          }
+
+                          return Row(
+                            children: [
+                              Expanded(
+                                flex: 8,
+                                child: Column(
+                                  children: [
+                                    Expanded(flex: 7, child: primary),
+                                    const SizedBox(height: 14),
+                                    Expanded(flex: 4, child: mirror),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                flex: 5,
+                                child: _buildCommandSidebar(snapshot),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ),
                   ],
@@ -237,7 +250,7 @@ class _ControllerLabScreenState extends State<ControllerLabScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Both charts consume the same controller state. Only the primary view accepts gestures.',
+              'Both charts share one viewport. Change their gesture modes independently.',
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.6),
                 fontSize: 12.5,
@@ -245,6 +258,22 @@ class _ControllerLabScreenState extends State<ControllerLabScreen> {
               ),
             ),
             const SizedBox(height: 18),
+            _SidebarSection(
+              title: 'Gesture modes',
+              children: [
+                _GestureModePicker(
+                  label: 'Primary chart',
+                  value: _primaryMode,
+                  onChanged: (mode) => setState(() => _primaryMode = mode),
+                ),
+                _GestureModePicker(
+                  label: 'Mirror chart',
+                  value: _mirrorMode,
+                  onChanged: (mode) => setState(() => _mirrorMode = mode),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
             _SidebarSection(
               title: 'Viewport',
               children: [
@@ -330,7 +359,7 @@ class _ControllerLabScreenState extends State<ControllerLabScreen> {
                 border: Border.all(color: Colors.white10),
               ),
               child: Text(
-                'Selected follow mode: ${snapshot.followLatestState.name}. If you drag the primary chart far enough left and then append candles, the live-update pill should appear without yanking the viewport.',
+                'Follow state: ${snapshot.followLatestState.name}. Drag an enabled chart into history, then append a candle to see the Go to live action without losing your place.',
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.72),
                   fontSize: 12,
@@ -407,6 +436,60 @@ class _ControllerLabScreenState extends State<ControllerLabScreen> {
         close: close,
       );
     });
+  }
+}
+
+/// Selects the interaction policy of one chart without changing its controller.
+class _GestureModePicker extends StatelessWidget {
+  const _GestureModePicker({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String label;
+  final ChartGestureMode value;
+  final ValueChanged<ChartGestureMode> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(color: Colors.white70, fontSize: 12),
+            ),
+          ),
+          SizedBox(
+            width: 150,
+            child: DropdownButton<ChartGestureMode>(
+              value: value,
+              isExpanded: true,
+              underline: const SizedBox.shrink(),
+              dropdownColor: const Color(0xFF111A2B),
+              style: const TextStyle(color: Colors.white, fontSize: 12),
+              items: ChartGestureMode.values
+                  .map((mode) => DropdownMenuItem(
+                        value: mode,
+                        child: Text(mode.name),
+                      ))
+                  .toList(),
+              onChanged: (mode) {
+                if (mode != null) onChanged(mode);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

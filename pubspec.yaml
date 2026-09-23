@@ -1,10 +1,12 @@
 name: imp_trading_chart
 description: >
-  A high-performance trading chart engine for Flutter with CustomPainter rendering, optimized for large datasets, real-time updates, and smooth pan & zoom.
+  A controller-driven trading line chart for Flutter with real-time updates, configurable gestures, and viewport-based CustomPainter rendering.
 
-version: 0.2.0
+version: 0.2.1
 
 homepage: https://github.com/rahul-cse-25/imp_trading_chart
+repository: https://github.com/rahul-cse-25/imp_trading_chart
+issue_tracker: https://github.com/rahul-cse-25/imp_trading_chart/issues
 
 #screenshots:
 #  - description: Trading chart with live updates

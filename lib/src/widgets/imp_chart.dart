@@ -1,8 +1,11 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:imp_trading_chart/imp_trading_chart.dart';
+import 'package:imp_trading_chart/src/behavior/chart_gesture_policy.dart'
+    show ChartGesturePolicy;
 import 'package:imp_trading_chart/src/engine/chart_engine.dart'
     show ChartEngine;
 import 'package:imp_trading_chart/src/layout/padding_resolver.dart';
@@ -38,6 +41,12 @@ class ImpChart extends StatefulWidget {
 
   /// Whether user gesture interactions are enabled.
   final bool enableGestures;
+
+  /// Preset touch behavior. Null keeps this constructor's legacy default.
+  final ChartGestureMode? gestureMode;
+
+  /// Optional per-gesture changes to [gestureMode].
+  final ChartGestureOverrides? gestureOverrides;
 
   /// Legacy engine callback preserved for backward compatibility.
   final void Function(ChartEngine)? onViewportChanged;
@@ -75,6 +84,8 @@ class ImpChart extends StatefulWidget {
     ChartStyle? style,
     this.currentPrice,
     this.enableGestures = true,
+    this.gestureMode,
+    this.gestureOverrides,
     this.onViewportChanged,
     this.onViewportSnapshotChanged,
     this.onChartStateChanged,
@@ -104,10 +115,16 @@ class ImpChart extends StatefulWidget {
     bool plotFeedback = false,
     bool crosshairChangeFeedback = false,
     ImpChartController? controller,
+    bool? enableGestures,
+    ChartGestureMode? gestureMode,
+    ChartGestureOverrides? gestureOverrides,
   }) {
     return ImpChart(
       candles: candles,
-      enableGestures: false,
+      enableGestures: enableGestures ??
+          (gestureMode != null || gestureOverrides != null),
+      gestureMode: gestureMode ?? ChartGestureMode.none,
+      gestureOverrides: gestureOverrides,
       onViewportChanged: onViewportChanged,
       onViewportSnapshotChanged: onViewportSnapshotChanged,
       onChartStateChanged: onChartStateChanged,
@@ -117,10 +134,15 @@ class ImpChart extends StatefulWidget {
       plotFeedback: plotFeedback,
       crosshairChangeFeedback: crosshairChangeFeedback,
       controller: controller,
-      style: ChartStyle.minimal(
-        lineColor: lineColor ?? const Color.fromRGBO(15, 173, 0, 1),
-        lineWidth: lineWidth ?? 2.0,
-        showLineGlow: showLineGlow,
+      style: _presetStyleForGestures(
+        ChartStyle.minimal(
+          lineColor: lineColor ?? const Color.fromRGBO(15, 173, 0, 1),
+          lineWidth: lineWidth ?? 2.0,
+          showLineGlow: showLineGlow,
+        ),
+        gestureMode,
+        gestureOverrides,
+        enableGestures ?? (gestureMode != null || gestureOverrides != null),
       ),
     );
   }
@@ -134,6 +156,8 @@ class ImpChart extends StatefulWidget {
     double? lineWidth,
     double? currentPrice,
     bool enableGestures = true,
+    ChartGestureMode? gestureMode,
+    ChartGestureOverrides? gestureOverrides,
     void Function(ChartEngine)? onViewportChanged,
     void Function(ChartViewportSnapshot viewport)? onViewportSnapshotChanged,
     void Function(ChartRenderSnapshot snapshot)? onChartStateChanged,
@@ -148,6 +172,8 @@ class ImpChart extends StatefulWidget {
       candles: candles,
       currentPrice: currentPrice,
       enableGestures: enableGestures,
+      gestureMode: gestureMode ?? ChartGestureMode.navigation,
+      gestureOverrides: gestureOverrides,
       onViewportChanged: onViewportChanged,
       onViewportSnapshotChanged: onViewportSnapshotChanged,
       onChartStateChanged: onChartStateChanged,
@@ -157,11 +183,16 @@ class ImpChart extends StatefulWidget {
       plotFeedback: plotFeedback,
       crosshairChangeFeedback: crosshairChangeFeedback,
       controller: controller,
-      style: ChartStyle.simple(
-        backgroundColor: backgroundColor ?? Colors.transparent,
-        textColor: textColor ?? Colors.white,
-        lineColor: lineColor ?? Colors.blue,
-        lineWidth: lineWidth ?? 2.0,
+      style: _presetStyleForGestures(
+        ChartStyle.simple(
+          backgroundColor: backgroundColor ?? Colors.transparent,
+          textColor: textColor ?? Colors.white,
+          lineColor: lineColor ?? Colors.blue,
+          lineWidth: lineWidth ?? 2.0,
+        ),
+        gestureMode,
+        gestureOverrides,
+        enableGestures,
       ),
     );
   }
@@ -176,6 +207,8 @@ class ImpChart extends StatefulWidget {
     double? currentPrice,
     bool showCrosshair = true,
     bool enableGestures = true,
+    ChartGestureMode? gestureMode,
+    ChartGestureOverrides? gestureOverrides,
     void Function(ChartEngine)? onViewportChanged,
     void Function(ChartViewportSnapshot viewport)? onViewportSnapshotChanged,
     void Function(ChartRenderSnapshot snapshot)? onChartStateChanged,
@@ -191,6 +224,8 @@ class ImpChart extends StatefulWidget {
       candles: candles,
       currentPrice: currentPrice,
       enableGestures: enableGestures,
+      gestureMode: gestureMode ?? ChartGestureMode.mixed,
+      gestureOverrides: gestureOverrides,
       onViewportChanged: onViewportChanged,
       onViewportSnapshotChanged: onViewportSnapshotChanged,
       onChartStateChanged: onChartStateChanged,
@@ -216,6 +251,8 @@ class ImpChart extends StatefulWidget {
     Color? backgroundColor,
     double? currentPrice,
     bool enableGestures = true,
+    ChartGestureMode? gestureMode,
+    ChartGestureOverrides? gestureOverrides,
     bool showGrid = true,
     bool showPriceLabels = true,
     bool showTimeLabels = true,
@@ -233,6 +270,8 @@ class ImpChart extends StatefulWidget {
       candles: candles,
       currentPrice: currentPrice,
       enableGestures: enableGestures,
+      gestureMode: gestureMode ?? ChartGestureMode.navigation,
+      gestureOverrides: gestureOverrides,
       onViewportChanged: onViewportChanged,
       onViewportSnapshotChanged: onViewportSnapshotChanged,
       onChartStateChanged: onChartStateChanged,
@@ -242,15 +281,39 @@ class ImpChart extends StatefulWidget {
       plotFeedback: plotFeedback,
       crosshairChangeFeedback: crosshairChangeFeedback,
       controller: controller,
-      style: ChartStyle.compact(
-        backgroundColor: backgroundColor ?? Colors.transparent,
-        lineColor: lineColor ?? Colors.blue,
-        showGrid: showGrid,
-        showPriceLabels: showPriceLabels,
-        showTimeLabels: showTimeLabels,
+      style: _presetStyleForGestures(
+        ChartStyle.compact(
+          backgroundColor: backgroundColor ?? Colors.transparent,
+          lineColor: lineColor ?? Colors.blue,
+          showGrid: showGrid,
+          showPriceLabels: showPriceLabels,
+          showTimeLabels: showTimeLabels,
+        ),
+        gestureMode,
+        gestureOverrides,
+        enableGestures,
       ),
     );
   }
+}
+
+ChartStyle _presetStyleForGestures(
+  ChartStyle style,
+  ChartGestureMode? mode,
+  ChartGestureOverrides? overrides,
+  bool enabled,
+) {
+  final policy = ChartGesturePolicy.resolve(
+    defaultMode: ChartGestureMode.navigation,
+    mode: mode,
+    overrides: overrides,
+    enableGestures: enabled,
+    styleShowsCrosshair: style.crosshairStyle.show,
+    revealCrosshairForPreset: true,
+  );
+  return policy.crosshairVisible
+      ? style.copyWith(crosshairStyle: style.crosshairStyle.copyWith(show: true))
+      : style;
 }
 
 /// Private Flutter binding state for [ImpChart].
@@ -273,20 +336,33 @@ class _ImpChartState extends State<ImpChart>
   Offset? _crosshairPosition;
   int? _crosshairIndex;
   Candle? _lastCrosshairCandle;
-  bool _hasPendingLatestData = false;
   int _pendingLatestCandleCount = 0;
   int? _lastKnownCandleCount;
   int? _lastKnownFirstCandleTime;
-  bool _externalSyncScheduled = false;
+  ImpChartController? _scheduledSyncController;
+  bool _longPressActive = false;
+  late List<Candle> _lastWidgetCandles;
 
   ImpChartController get _controller =>
       widget.controller ?? _internalController!;
 
   ChartEngine get _engine => _controller.engine;
 
+  ChartGesturePolicy get _gesturePolicy => ChartGesturePolicy.resolve(
+        defaultMode: widget.style.crosshairStyle.show
+            ? ChartGestureMode.holdOnly
+            : ChartGestureMode.navigation,
+        mode: widget.gestureMode,
+        overrides: widget.gestureOverrides,
+        enableGestures: widget.enableGestures,
+        styleShowsCrosshair: widget.style.crosshairStyle.show,
+        revealCrosshairForPreset: false,
+      );
+
   @override
   void initState() {
     super.initState();
+    _lastWidgetCandles = List<Candle>.unmodifiable(widget.candles);
     _ensureController();
     _pulseCoordinator = ChartPulseCoordinator(
       vsync: this,
@@ -313,11 +389,27 @@ class _ImpChartState extends State<ImpChart>
       _ensureController();
     }
 
-    if (_didCandlesChange(oldWidget)) {
+    if (_didCandlesChange()) {
+      _lastWidgetCandles = List<Candle>.unmodifiable(widget.candles);
       _syncControllerCandles();
     }
 
-    _syncPulseState();
+    if (_longPressActive && !_gesturePolicy.longPressCrosshair) {
+      _longPressActive = false;
+      _crosshairPosition = null;
+      _crosshairIndex = null;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _controller.hideCrosshair();
+        }
+      });
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _syncPulseState();
+      }
+    });
   }
 
   @override
@@ -334,8 +426,8 @@ class _ImpChartState extends State<ImpChart>
         candles: widget.candles,
         defaultVisibleCount: widget.defaultVisibleCount ?? 100,
       );
-    } else if (_shouldSyncExternalController(widget.controller!)) {
-      _scheduleExternalControllerSync(widget.controller!);
+    } else if (_shouldSyncController(widget.controller!)) {
+      _scheduleControllerSync(widget.controller!);
     }
 
     _bindController(_controller);
@@ -348,7 +440,11 @@ class _ImpChartState extends State<ImpChart>
       _handleChartEvent(event);
       widget.onChartEvent?.call(event);
     });
-    _handleControllerChanged();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _controller == controller) {
+        _handleControllerChanged();
+      }
+    });
   }
 
   /// Removes widget listeners from the previously active controller instance.
@@ -396,10 +492,8 @@ class _ImpChartState extends State<ImpChart>
       _lastCrosshairCandle = candle;
       _crosshairIndex = visibleIndex;
       if (_controller.isFollowingLatest || seriesChanged) {
-        _hasPendingLatestData = false;
         _pendingLatestCandleCount = 0;
       } else if (addedCandles > 0) {
-        _hasPendingLatestData = true;
         _pendingLatestCandleCount += addedCandles;
       }
       if (selection == null) {
@@ -415,93 +509,47 @@ class _ImpChartState extends State<ImpChart>
   }
 
   /// Detects meaningful candle input changes, including in-place list mutation.
-  bool _didCandlesChange(ImpChart oldWidget) {
-    final previousCandles = _controller.candles;
-    final currentCandles = widget.candles;
-
-    if (currentCandles.length != previousCandles.length) {
-      return true;
-    }
-
-    if (currentCandles.isEmpty && previousCandles.isEmpty) {
-      return false;
-    }
-
-    if (currentCandles.isEmpty || previousCandles.isEmpty) {
-      return true;
-    }
-
-    if (currentCandles.first != previousCandles.first) {
-      return true;
-    }
-
-    if (currentCandles.last != previousCandles.last) {
-      return true;
-    }
-
-    if (oldWidget.defaultVisibleCount != widget.defaultVisibleCount) {
-      return true;
-    }
-
-    return false;
+  bool _didCandlesChange() {
+    return !listEquals(_lastWidgetCandles, widget.candles);
   }
 
-  /// Returns `true` when the external controller needs to be synchronized with
+  /// Returns `true` when the active controller needs synchronization with
   /// the current widget candle input.
-  bool _shouldSyncExternalController(ImpChartController controller) {
+  bool _shouldSyncController(ImpChartController controller) {
     final previousCandles = controller.candles;
     final currentCandles = widget.candles;
 
-    if (identical(previousCandles, currentCandles)) {
-      return false;
-    }
-
-    if (currentCandles.length != previousCandles.length) {
-      return true;
-    }
-
-    if (currentCandles.isEmpty && previousCandles.isEmpty) {
-      return false;
-    }
-
-    if (currentCandles.isEmpty || previousCandles.isEmpty) {
-      return true;
-    }
-
-    return currentCandles.first != previousCandles.first ||
-        currentCandles.last != previousCandles.last;
+    return !listEquals(previousCandles, currentCandles);
   }
 
   /// Synchronizes widget candles into the active controller.
   ///
-  /// Internal controllers can be updated immediately because the widget owns
-  /// their lifecycle. External controllers are synchronized after the current
-  /// frame so ancestor listeners are never notified during build.
+  /// Changes are synchronized after the current frame so controller listeners
+  /// are never notified from a widget lifecycle build.
   void _syncControllerCandles() {
-    if (widget.controller == null) {
-      _controller.setCandles(widget.candles);
-      return;
-    }
-
-    if (_shouldSyncExternalController(widget.controller!)) {
-      _scheduleExternalControllerSync(widget.controller!);
+    if (_shouldSyncController(_controller)) {
+      _scheduleControllerSync(_controller);
     }
   }
 
-  /// Schedules candle synchronization for an external controller after build.
-  void _scheduleExternalControllerSync(ImpChartController controller) {
-    if (_externalSyncScheduled) {
+  /// Schedules a changed widget input without overwriting newer controller data.
+  void _scheduleControllerSync(ImpChartController controller) {
+    if (_scheduledSyncController == controller) {
       return;
     }
 
-    _externalSyncScheduled = true;
+    _scheduledSyncController = controller;
+    final controllerCandlesAtSchedule = controller.candles;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _externalSyncScheduled = false;
-      if (!mounted || widget.controller != controller) {
+      if (_scheduledSyncController == controller) {
+        _scheduledSyncController = null;
+      }
+      if (!mounted || _controller != controller ||
+          !identical(controller.candles, controllerCandlesAtSchedule)) {
         return;
       }
 
-      if (_shouldSyncExternalController(controller)) {
+      if (_shouldSyncController(controller)) {
         controller.setCandles(widget.candles);
       }
     });
@@ -523,29 +571,29 @@ class _ImpChartState extends State<ImpChart>
     if (shouldPulse && widget.plotFeedback) {
       HapticFeedback.lightImpact();
     }
-
-    if (event.type == ChartEventType.liveUpdatePreservedContext) {
-      setState(() {
-        _hasPendingLatestData = true;
-      });
-    }
   }
 
   /// Starts a new scale gesture tracking session.
-  void _handleScaleStart(ScaleStartDetails details, Size size) {
-    _gestureSession.start(details.focalPoint);
+  void _handleScaleStart(ScaleStartDetails details) {
+    _gestureSession.start(
+      details.localFocalPoint,
+      pointerCount: details.pointerCount,
+    );
   }
 
   /// Routes the current scale update through the gesture session helper.
   void _handleScaleUpdate(ScaleUpdateDetails details, Size size) {
-    if (!widget.enableGestures || widget.style.crosshairStyle.show) return;
+    final policy = _gesturePolicy;
+    if (_longPressActive || (!policy.pan && !policy.pinchZoom)) return;
 
     final mapper = _createMapper(size);
     _gestureSession.update(
       details: details,
       candleWidth: mapper.candleWidth,
-      anchorIndex: mapper.xToIndex(details.focalPoint.dx),
+      anchorIndex: mapper.xToIndex(details.localFocalPoint.dx),
       totalCount: _engine.candles.length,
+      allowPan: policy.pan,
+      allowPinchZoom: policy.pinchZoom,
       zoomIn: _controller.zoomIn,
       zoomOut: _controller.zoomOut,
       zoomAround: (anchorIndex, step) {
@@ -557,13 +605,14 @@ class _ImpChartState extends State<ImpChart>
 
   /// Resets the viewport back to the controller's latest-following state.
   void _handleDoubleTap() {
-    if (!widget.enableGestures || widget.style.crosshairStyle.show) return;
+    if (!_gesturePolicy.doubleTapReset) return;
     _controller.resetViewport();
   }
 
   /// Begins crosshair tracking from a long-press gesture.
   void _handleLongPressStart(LongPressStartDetails details, Size size) {
-    if (!widget.enableGestures || !widget.style.crosshairStyle.show) return;
+    if (!_gesturePolicy.longPressCrosshair) return;
+    _longPressActive = true;
     _updateCrosshair(details.localPosition, size);
   }
 
@@ -572,12 +621,14 @@ class _ImpChartState extends State<ImpChart>
     LongPressMoveUpdateDetails details,
     Size size,
   ) {
-    if (!widget.enableGestures || !widget.style.crosshairStyle.show) return;
+    if (!_gesturePolicy.longPressCrosshair || !_longPressActive) return;
     _updateCrosshair(details.localPosition, size);
   }
 
   /// Clears crosshair selection when the long press ends.
   void _handleLongPressEnd() {
+    if (!_longPressActive) return;
+    _longPressActive = false;
     _controller.hideCrosshair();
     setState(() {
       _crosshairPosition = null;
@@ -605,10 +656,6 @@ class _ImpChartState extends State<ImpChart>
     if (widget.plotFeedback) {
       HapticFeedback.selectionClick();
     }
-    setState(() {
-      _hasPendingLatestData = false;
-      _pendingLatestCandleCount = 0;
-    });
   }
 
   /// Keeps the repeating ripple state aligned with current widget inputs.
@@ -650,28 +697,31 @@ class _ImpChartState extends State<ImpChart>
         builder: (context, constraints) {
           final size = Size(constraints.maxWidth, constraints.maxHeight);
           final mapper = _createMapper(size);
+          final gestures = _gesturePolicy;
 
-          return GestureDetector(
-            onScaleStart: widget.style.crosshairStyle.show
-                ? null
-                : (details) => _handleScaleStart(details, size),
-            onScaleUpdate: widget.style.crosshairStyle.show
-                ? null
-                : (details) => _handleScaleUpdate(details, size),
-            onDoubleTap:
-                widget.style.crosshairStyle.show ? null : _handleDoubleTap,
-            onLongPressStart: widget.style.crosshairStyle.show
-                ? (details) => _handleLongPressStart(details, size)
-                : null,
-            onLongPressMoveUpdate: widget.style.crosshairStyle.show
-                ? (details) => _handleLongPressMoveUpdate(details, size)
-                : null,
-            onLongPressEnd: widget.style.crosshairStyle.show
-                ? (_) => _handleLongPressEnd()
-                : null,
-            child: Stack(
-              children: [
-                CustomPaint(
+          return Stack(
+            children: [
+              GestureDetector(
+                onScaleStart: gestures.pan || gestures.pinchZoom
+                    ? _handleScaleStart
+                    : null,
+                onScaleUpdate: gestures.pan || gestures.pinchZoom
+                    ? (details) => _handleScaleUpdate(details, size)
+                    : null,
+                onDoubleTap: gestures.doubleTapReset ? _handleDoubleTap : null,
+                onLongPressStart: gestures.longPressCrosshair
+                    ? (details) => _handleLongPressStart(details, size)
+                    : null,
+                onLongPressMoveUpdate: gestures.longPressCrosshair
+                    ? (details) => _handleLongPressMoveUpdate(details, size)
+                    : null,
+                onLongPressEnd: gestures.longPressCrosshair
+                    ? (_) => _handleLongPressEnd()
+                    : null,
+                onLongPressCancel: gestures.longPressCrosshair
+                    ? _handleLongPressEnd
+                    : null,
+                child: CustomPaint(
                   painter: ChartPainter(
                     candles: _engine.getVisibleCandles(),
                     mapper: mapper,
@@ -684,16 +734,15 @@ class _ImpChartState extends State<ImpChart>
                   ),
                   size: size,
                 ),
-                if (_hasPendingLatestData && !_controller.isFollowingLatest)
-                  ChartLiveUpdateIndicator(
-                    onTap: _handleLiveIndicatorTap,
-                    newCandleCount: _pendingLatestCandleCount <= 0
-                        ? 1
-                        : _pendingLatestCandleCount,
-                    bottomInset: mapper.paddingBottom + 8,
-                  ),
-              ],
-            ),
+              ),
+              if (_pendingLatestCandleCount > 0 &&
+                  !_controller.isFollowingLatest)
+                ChartLiveUpdateIndicator(
+                  onTap: _handleLiveIndicatorTap,
+                  newCandleCount: _pendingLatestCandleCount,
+                  bottomInset: mapper.paddingBottom + 8,
+                ),
+            ],
           );
         },
       ),

@@ -1,0 +1,32 @@
+name: Package checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.4'
+          channel: stable
+          cache: true
+      - name: Install package dependencies
+        run: flutter pub get
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed .
+      - name: Analyze package
+        run: dart analyze
+      - name: Test package and visual baselines
+        run: flutter test
+      - name: Analyze example
+        working-directory: example
+        run: |
+          flutter pub get
+          dart analyze
+      - name: Check publish archive
+        run: flutter pub publish --dry-run

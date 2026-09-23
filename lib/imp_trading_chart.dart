@@ -73,6 +73,8 @@ export 'src/api/controller/chart_events.dart';
 export 'src/api/controller/chart_live_view_policy.dart';
 export 'src/api/controller/chart_snapshots.dart';
 export 'src/api/controller/imp_chart_controller.dart';
+export 'src/behavior/chart_gesture_policy.dart'
+    show ChartGestureMode, ChartGestureOverrides;
 
 /// ─────────────────────────────────────────────────────────
 /// 🎨 STYLING & LAYOUT CONFIGURATION

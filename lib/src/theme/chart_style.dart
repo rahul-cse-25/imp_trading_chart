@@ -236,7 +236,7 @@ class ChartStyle {
       ).copyWith(labelFontSize: 10.0),
       rippleStyle: RippleAnimationStyle(color: pulseColor),
       axisStyle: const AxisStyle(showGrid: false),
-      crosshairStyle: CrosshairStyle.dotted(),
+      crosshairStyle: CrosshairStyle.dotted().copyWith(show: showCrosshair),
       layout: ChartLayout(
         chartDataPadding: EdgeInsets.fromLTRB(10, 30, 10, 10),
       ),

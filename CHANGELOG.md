@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.2.1
+
+### Added
+- Added widget-local `ChartGestureMode` presets and immutable `ChartGestureOverrides` for pan, pinch zoom, double-tap reset, and long-press crosshair.
+- Added gesture, data-correction, visual regression, and 10k-candle benchmark tests, plus pinned CI checks.
+- Added independent gesture-mode selectors to the two-chart Controller Lab example.
+
+### Fixed
+- Trading charts now support navigation and long-press crosshair together by default. Select `ChartGestureMode.holdOnly` to keep hold-only interaction.
+- `ChartStyle.trading(showCrosshair: false)` now hides the crosshair as requested.
+- Pinch zoom uses local chart coordinates; two-finger movement no longer pans the viewport.
+- Same-length candle corrections, including in-place list mutations, reach the controller without resetting a detached viewport.
+- Rebuilding a chart with unchanged older widget candles no longer overwrites newer external-controller data.
+- Initial widget callbacks and lifecycle data synchronization now occur after the build frame, avoiding parent rebuild notifications during build.
+- Updating the latest existing candle while detached no longer displays a phantom `+1` live count.
+- The Go to live control now receives taps independently of chart double-tap gestures.
+- Time-axis labels that cannot fit within a narrow chart are skipped instead of causing a paint exception.
+
+### Changed
+- Gesture settings affect user input only. Controller commands, near-latest following, and the Go to live button remain available.
+- Updated package documentation to describe the current close-price line renderer accurately.
+- Refreshed pub.dev metadata with explicit repository and issue tracker links.
+
 ## 0.2.0
 
 ### Added

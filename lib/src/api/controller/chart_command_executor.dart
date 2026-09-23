@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:meta/meta.dart';
 import 'package:imp_trading_chart/imp_trading_chart.dart' show Candle;
 import 'package:imp_trading_chart/src/api/controller/chart_interaction_state.dart';
@@ -257,22 +258,6 @@ class ChartCommandExecutor {
   }
 
   bool _isEquivalentDataset(List<Candle> previous, List<Candle> next) {
-    if (identical(previous, next)) {
-      return true;
-    }
-
-    if (previous.length != next.length) {
-      return false;
-    }
-
-    if (previous.isEmpty && next.isEmpty) {
-      return true;
-    }
-
-    if (previous.isEmpty || next.isEmpty) {
-      return false;
-    }
-
-    return previous.first == next.first && previous.last == next.last;
+    return listEquals(previous, next);
   }
 }

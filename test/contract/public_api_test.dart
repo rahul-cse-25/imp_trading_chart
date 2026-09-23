@@ -30,4 +30,22 @@ void main() {
       isA<ImpChart>(),
     );
   });
+
+  test('gesture modes and overrides are available from the package import', () {
+    final chart = ImpChart.trading(
+      candles: const <Candle>[],
+      gestureMode: ChartGestureMode.holdOnly,
+      gestureOverrides: const ChartGestureOverrides(pan: true),
+    );
+
+    expect(chart.gestureMode, ChartGestureMode.holdOnly);
+    expect(chart.gestureOverrides!.pan, isTrue);
+    expect(ImpChart.trading(candles: const <Candle>[]).gestureMode,
+        ChartGestureMode.mixed);
+    expect(ImpChart.simple(candles: const <Candle>[]).gestureMode,
+        ChartGestureMode.navigation);
+    expect(ImpChart.compact(candles: const <Candle>[]).gestureMode,
+        ChartGestureMode.navigation);
+    expect(ImpChart.minimal(candles: const <Candle>[]).enableGestures, isFalse);
+  });
 }

@@ -1,5 +1,32 @@
 # ImpChart Quick Reference Guide
 
+## Gesture Configuration
+
+```dart
+ImpChart.trading(
+  candles: candles,
+  gestureMode: ChartGestureMode.mixed,
+  gestureOverrides: const ChartGestureOverrides(pinchZoom: false),
+);
+```
+
+| Mode | One-finger pan | Pinch zoom | Double tap reset | Hold crosshair |
+| --- | --- | --- | --- | --- |
+| `mixed` | Yes | Yes | Yes | Yes |
+| `navigation` | Yes | Yes | Yes | No |
+| `holdOnly` | No | No | No | Yes |
+| `panOnly` | Yes | No | No | No |
+| `zoomOnly` | No | Yes | No | No |
+| `none` | No | No | No | No |
+
+`trading` defaults to `mixed`; `simple`/`compact` retain navigation;
+`minimal` stays non-interactive. Nullable override fields inherit the mode;
+`enableGestures: false` disables all chart gestures. Modes do not change
+controller commands or automatic live following. `showCrosshair: false` on
+`trading` prevents hold selection even in `mixed`. The live button stays usable.
+
+---
+
 ## Controller Quick Commands
 
 ```dart
@@ -29,6 +56,8 @@ controller.resetViewport()
 - Near latest charts keep auto-following on live updates
 - Detached historical charts preserve user context and do not jump
 - Detached historical charts show a `Live` affordance; tap it to return to latest
+- The button counts newly appended candles; an update to the last candle does not add to the count
+- For frequent ticks, use `applyTick`, `appendCandle`, or `updateLastCandle` directly; `setCandles` compares same-length datasets to detect historical corrections
 
 ### Useful Snapshot Access
 

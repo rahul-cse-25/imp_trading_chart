@@ -196,5 +196,35 @@ void main() {
 
       await subscription.cancel();
     });
+
+    test('middle-candle corrections notify once and preserve history', () {
+      final input = buildCandles(80);
+      final controller = ImpChartController(
+        candles: input,
+        defaultVisibleCount: 20,
+      );
+      controller.panByCandles(-10);
+      final start = controller.viewport.startIndex;
+      var notifications = 0;
+      controller.addListener(() => notifications++);
+
+      final corrected = input[40].copyWith(close: 999);
+      input[40] = corrected;
+      controller.setCandles(input);
+
+      expect(controller.candles[40], corrected);
+      expect(controller.viewport.startIndex, start);
+      expect(notifications, 1);
+
+      final replacement = List<Candle>.of(controller.candles);
+      replacement[30] = replacement[30].copyWith(close: 888);
+      controller.setCandles(replacement);
+      expect(controller.candles[30].close, 888);
+      expect(controller.viewport.startIndex, start);
+      expect(notifications, 2);
+
+      controller.setCandles(List<Candle>.of(replacement));
+      expect(notifications, 2);
+    });
   });
 }

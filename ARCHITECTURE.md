@@ -34,6 +34,30 @@ graph TD
 - **Core Engine Layer**: viewport math, price scale, coordinate mapping, visible-range computation
 - **Rendering/Layout Layer**: padding resolution, painter orchestration, draw delegates
 - **Widget Layer**: Flutter binding, gesture forwarding, animation-only UI state
+- **Behavior Layer**: widget-local gesture mode and override resolution
+
+### Widget-Local Gesture Flow
+
+```mermaid
+flowchart LR
+  A[Widget mode and overrides] --> B[ChartGesturePolicy]
+  B --> C[Registered Flutter recognizers]
+  C --> D[ChartGestureSession]
+  D --> E[ImpChartController commands]
+  E --> F[Shared viewport state]
+```
+
+`enableGestures: false` has final precedence. One-finger movement pans, while
+two-finger movement only zooms when enabled. Long-press selection blocks scale
+updates until release. An explicit hold mode can reveal the crosshair on a
+preset, but the base widget's supplied style controls its visibility. Gesture
+configuration is never stored in the controller: two widgets can share state
+and expose different gestures.
+
+Incoming widget candles are compared to a prior immutable input snapshot.
+Controller-only live updates are not overwritten by unchanged widget input.
+Same-length dataset comparisons catch historical corrections; direct live
+controller commands avoid this scan for frequent ticks.
 
 ### 1. ChartEngine
 The `ChartEngine` is the brain of the package. It holds the immutable state of the chart, including the full list of candles and the current viewport.

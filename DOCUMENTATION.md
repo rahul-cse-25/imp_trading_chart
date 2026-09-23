@@ -40,6 +40,36 @@ ImpChart Widget (State management + Gestures)
 
 ## Controller Layer
 
+### Chart Gesture Policy
+
+`ImpChart` accepts `gestureMode` and `gestureOverrides` independently on each
+widget. The modes are `mixed`, `navigation`, `holdOnly`, `panOnly`, `zoomOnly`,
+and `none`. Overrides can independently set `pan`, `pinchZoom`,
+`doubleTapReset`, and `longPressCrosshair`. A null override inherits the mode.
+The existing `enableGestures: false` has final precedence. Gesture policy is
+widget-local, so two widgets can share a controller and still have different
+input behavior. Controller commands and auto-follow remain independent.
+
+One finger pans; two fingers pinch without incidental pan. A held crosshair
+suppresses scale handling until released. Pinch anchoring uses chart-local
+coordinates. A `Go to live (+count)` action remains tappable even for `none`.
+
+Presets with a hidden crosshair reveal it when hold is explicitly requested.
+`ChartStyle.trading(showCrosshair: false)` remains authoritative. With the base
+constructor, the supplied `ChartStyle` controls crosshair visibility.
+
+The renderer currently draws a close-price line from OHLC `Candle` values;
+it does not draw candle bodies, wicks, or volume bars.
+
+### Data Synchronization
+
+The widget compares incoming candles with its prior immutable input snapshot,
+including the middle of an in-place-mutated list. A parent rebuild with
+unchanged input does not overwrite data appended through an external
+controller. Controller `setCandles` compares same-length datasets; for high
+frequency live feeds, call `applyTick`, `appendCandle`, or `updateLastCandle`
+directly. Widget lifecycle synchronization is deferred until after build.
+
 ### ImpChartController (`api/controller/imp_chart_controller.dart`)
 
 **Purpose**: Public orchestration API for programmatic control and safe observation.

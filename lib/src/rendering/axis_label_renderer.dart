@@ -161,7 +161,11 @@ class AxisLabelRenderer {
 
       textPainter.text = TextSpan(text: timeText, style: textStyle);
       textPainter.layout();
-      if (textPainter.width <= 0 || textPainter.height <= 0) continue;
+      if (textPainter.width <= 0 ||
+          textPainter.height <= 0 ||
+          textPainter.width > mapper.contentWidth) {
+        continue;
+      }
 
       double labelX;
       if (visibleCount == 1 && labelCountToShow == 1) {

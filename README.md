@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <b>A high-performance trading chart engine for Flutter</b><br/>
+  <b>A controller-driven trading line chart for Flutter</b><br/>
   Inspired by TradingView Lightweight Charts
 </p>
 
@@ -23,7 +23,7 @@
 
 ## 🚀 Overview
 
-`imp_trading_chart` is a **rendering-first trading chart engine** for Flutter.
+`imp_trading_chart` is a **rendering-first trading line chart** for Flutter.
 
 It is **not a widget-heavy chart**, but a **CustomPainter + viewport-driven engine**
 designed for **performance, precision, and scalability**.
@@ -33,7 +33,56 @@ Built specifically for:
 * 📈 Financial & stock market apps
 * 💹 Crypto & trading platforms
 * ⚡ Real-time price feeds
-* 🧠 Large datasets (10k+ candles)
+* 🧠 Viewport-limited rendering for large datasets
+
+---
+
+## Quick Start
+
+```dart
+import 'package:imp_trading_chart/imp_trading_chart.dart';
+
+ImpChart.trading(candles: candles);
+
+// Inspect by holding without allowing drag or zoom.
+ImpChart.trading(
+  candles: candles,
+  gestureMode: ChartGestureMode.holdOnly,
+);
+```
+
+The current renderer draws a line through each candle's **close** price. The
+`Candle` model also carries OHLC and optional volume values; candle bodies and
+volume panels are planned for a later release.
+
+### Gesture Modes
+
+| Mode | Pan | Pinch | Double tap reset | Hold crosshair |
+| --- | --- | --- | --- | --- |
+| `mixed` | Yes | Yes | Yes | Yes |
+| `navigation` | Yes | Yes | Yes | No |
+| `holdOnly` | No | No | No | Yes |
+| `panOnly` | Yes | No | No | No |
+| `zoomOnly` | No | Yes | No | No |
+| `none` | No | No | No | No |
+
+`trading` defaults to `mixed`; `simple` and `compact` default to `navigation`;
+`minimal` stays non-interactive unless given a mode or overrides. Existing
+`enableGestures: false` always disables chart gestures. To change one action:
+
+```dart
+ImpChart.trading(
+  candles: candles,
+  gestureOverrides: const ChartGestureOverrides(
+    pinchZoom: false,
+    doubleTapReset: false,
+  ),
+);
+```
+
+Gesture modes are per widget. Charts may share one controller yet use different
+modes. Modes do not change programmatic controller commands or live following.
+The Go to live button remains tappable when a chart is in `none` or `holdOnly`.
 
 ---
 
@@ -99,7 +148,7 @@ Built specifically for:
 
 | Variant | Use Case                         |
 | ------- | -------------------------------- |
-| Trading | Full-featured professional chart |
+| Trading | Interactive close-price line chart |
 | Simple  | Clean chart with labels          |
 | Compact | Dashboards & lists               |
 | Minimal | Sparklines & previews            |
@@ -124,8 +173,8 @@ CustomPainter (pixels only)
 * ❌ No unnecessary rebuilds
 
 ✅ Only **visible candles** are processed
-✅ Pan & zoom are **O(1)** operations
-✅ Perfect for **live trading data**
+Pan and zoom update a bounded viewport; rendering processes the visible slice.
+The reproducible 10k-candle comparison benchmark is in `test/benchmark/`.
 
 ---
 
@@ -133,7 +182,7 @@ CustomPainter (pixels only)
 
 ```yaml
 dependencies:
-  imp_trading_chart: ^0.2.0
+  imp_trading_chart: ^0.2.1
 ```
 
 ---
@@ -168,7 +217,7 @@ controller.zoomIn();
 
 - If the chart is at or near the latest candles, it keeps following live data.
 - If the user pans into older history, incoming candles update the data without force-scrolling.
-- If live data arrives while detached, the chart shows a `Live` affordance that scrolls back to the latest candles on tap.
+- If new candles arrive while detached, the chart shows a `Go to live (+count)` action that scrolls back to the latest candles on tap.
 - Calling `scrollToLatest()` or resetting the viewport restores follow-latest behavior.
 
 The internal near-latest threshold is currently `3` candles.
@@ -222,7 +271,9 @@ flutter run
 Only these are public & stable:
 
 * `ImpChart`
-* `ImpChartController`
+  * `ImpChartController`
+  * `ChartGestureMode` and `ChartGestureOverrides`
+  * Controller snapshots and `ChartEvent`
 * `Candle`
 * `ChartStyle`
 * `ChartLayout`

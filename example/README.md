@@ -29,6 +29,7 @@ This project is designed to showcase **best practices**, **factory-based APIs**,
     - External `ImpChartController` usage
     - Programmatic pan, zoom, fit-all, reset, and scroll-to-latest
     - Manual and live update actions to verify controller behavior
+    - Two charts sharing one controller with independent gesture-mode selectors
 
 - 🧭 **Interactive Trading Tools**
     - Crosshair with price & time labels
@@ -62,7 +63,7 @@ This example is built to:
 
 | Chart Type | Description |
 |-----------|------------|
-| **Trading** | Full-featured chart with crosshair, labels, ripple & indicators |
+| **Trading** | Interactive close-price line with crosshair, labels, and ripple |
 | **Simple** | Clean chart with labels and minimal interaction |
 | **Compact** | Optimized for dashboards and small widgets |
 | **Minimal** | Ultra-lightweight sparkline-style chart |
