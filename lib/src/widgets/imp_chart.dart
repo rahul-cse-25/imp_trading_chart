@@ -121,8 +121,8 @@ class ImpChart extends StatefulWidget {
   }) {
     return ImpChart(
       candles: candles,
-      enableGestures: enableGestures ??
-          (gestureMode != null || gestureOverrides != null),
+      enableGestures:
+          enableGestures ?? (gestureMode != null || gestureOverrides != null),
       gestureMode: gestureMode ?? ChartGestureMode.none,
       gestureOverrides: gestureOverrides,
       onViewportChanged: onViewportChanged,
@@ -312,7 +312,8 @@ ChartStyle _presetStyleForGestures(
     revealCrosshairForPreset: true,
   );
   return policy.crosshairVisible
-      ? style.copyWith(crosshairStyle: style.crosshairStyle.copyWith(show: true))
+      ? style.copyWith(
+          crosshairStyle: style.crosshairStyle.copyWith(show: true))
       : style;
 }
 
@@ -544,7 +545,8 @@ class _ImpChartState extends State<ImpChart>
       if (_scheduledSyncController == controller) {
         _scheduledSyncController = null;
       }
-      if (!mounted || _controller != controller ||
+      if (!mounted ||
+          _controller != controller ||
           !identical(controller.candles, controllerCandlesAtSchedule)) {
         return;
       }
@@ -718,9 +720,8 @@ class _ImpChartState extends State<ImpChart>
                 onLongPressEnd: gestures.longPressCrosshair
                     ? (_) => _handleLongPressEnd()
                     : null,
-                onLongPressCancel: gestures.longPressCrosshair
-                    ? _handleLongPressEnd
-                    : null,
+                onLongPressCancel:
+                    gestures.longPressCrosshair ? _handleLongPressEnd : null,
                 child: CustomPaint(
                   painter: ChartPainter(
                     candles: _engine.getVisibleCandles(),

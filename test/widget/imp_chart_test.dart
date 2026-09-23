@@ -495,7 +495,8 @@ void main() {
     await tester.pump();
     expect(find.text('Go to live (+1)'), findsOneWidget);
     controller.updateLastCandle(
-      controller.candles.last.copyWith(close: controller.candles.last.close + 1),
+      controller.candles.last
+          .copyWith(close: controller.candles.last.close + 1),
     );
     await tester.pump();
     expect(find.text('Go to live (+1)'), findsOneWidget);
@@ -554,10 +555,12 @@ void main() {
           ),
         ),
       ));
-      return tester.widget<GestureDetector>(find.descendant(
-        of: find.byType(ImpChart),
-        matching: find.byType(GestureDetector),
-      ).first);
+      return tester.widget<GestureDetector>(find
+          .descendant(
+            of: find.byType(ImpChart),
+            matching: find.byType(GestureDetector),
+          )
+          .first);
     }
 
     final mixed = await detector(ChartGestureMode.mixed);
@@ -674,10 +677,12 @@ void main() {
     ));
     final widget = tester.widget<ImpChart>(find.byType(ImpChart));
     expect(widget.style.crosshairStyle.show, isFalse);
-    final detector = tester.widget<GestureDetector>(find.descendant(
-      of: find.byType(ImpChart),
-      matching: find.byType(GestureDetector),
-    ).first);
+    final detector = tester.widget<GestureDetector>(find
+        .descendant(
+          of: find.byType(ImpChart),
+          matching: find.byType(GestureDetector),
+        )
+        .first);
     expect(detector.onScaleUpdate, isNotNull);
     expect(detector.onLongPressStart, isNull);
   });
@@ -708,10 +713,10 @@ void main() {
 
     final chart = find.byType(ImpChart);
     final topLeft = tester.getTopLeft(chart);
-    final first = await tester.startGesture(topLeft + const Offset(25, 100),
-        pointer: 1);
-    final second = await tester.startGesture(topLeft + const Offset(65, 100),
-        pointer: 2);
+    final first =
+        await tester.startGesture(topLeft + const Offset(25, 100), pointer: 1);
+    final second =
+        await tester.startGesture(topLeft + const Offset(65, 100), pointer: 2);
     await tester.pump();
     await first.moveTo(topLeft + const Offset(5, 100));
     await second.moveTo(topLeft + const Offset(90, 100));
