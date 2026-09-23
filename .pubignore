@@ -2,6 +2,16 @@
 screenshots/
 screenshots/**
 
+# Generated output is not part of the package. This file overrides the root
+# .gitignore during publishing, so these paths must be excluded here too.
+/build/
+/coverage/
+/doc/api/
+/pubspec.lock
+/example/build/
+/example/coverage/
+/example/pubspec.lock
+
 # Videos & gifs
 *.gif
 *.mp4

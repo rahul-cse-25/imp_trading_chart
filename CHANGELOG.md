@@ -17,6 +17,7 @@
 - Updating the latest existing candle while detached no longer displays a phantom `+1` live count.
 - The Go to live control now receives taps independently of chart double-tap gestures.
 - Time-axis labels that cannot fit within a narrow chart are skipped instead of causing a paint exception.
+- Excluded generated build and coverage output from the published archive.
 
 ### Changed
 - Gesture settings affect user input only. Controller commands, near-latest following, and the Go to live button remain available.
